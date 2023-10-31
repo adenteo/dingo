@@ -2,9 +2,17 @@
 import { useState } from "react";
 import Locations from "./components/Locations";
 import FilterComponent from "./components/Filters";
+import GoogleMaps from "./components/GoogleMaps";
+import { useLoadScript, Libraries } from "@react-google-maps/api";
 // import { AiFillHtml5, AiFillChrome, AiOutlineDown } from "react-icons/ai";
 
+const placesLibrary: Libraries = ["places"];
+
 export default function Home() {
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API ?? "",
+    libraries: placesLibrary,
+});
     const [startLocation, setStartLocation] = useState("");
     const [endLocation, setEndLocation] = useState("");
     const foodPlaces = [
@@ -51,8 +59,11 @@ export default function Home() {
                     </h2>
                 </div>
                 <Locations
+                    startLocation={startLocation}
+                    endLocation={endLocation}
                     setStartLocation={setStartLocation}
                     setEndLocation={setEndLocation}
+                    isLoaded={isLoaded}
                 ></Locations>
                 {/* <FilterComponent filters={["Asian", "Western"]}/> */}
                 <div>
@@ -73,15 +84,7 @@ export default function Home() {
             </section>
             {/* Result page */}
             {/* With start and destination, list of food places will be provided. Details will show extra time taken, extra distance taken. Food place will show name, location, google stars, cuisine. */}
-            <section className="flex min-h-screen flex-col items-center justify-between py-24">
-                {/* <div className="text-white text-xs mx-10 justify-start">
-                      <div className="">
-                        Start: 
-                      </div>
-                      <div className="">
-                        End: 
-                      </div>
-                    </div> */}
+            {/* <section className="flex min-h-screen flex-col items-center justify-between py-24">
                 <div>
                     {foodPlaces.map((place) => (
                         <div className="p-3 m-3 bg-white text-black rounded w-[80vw] flex">
@@ -94,7 +97,6 @@ export default function Home() {
                                     {place.Name}
                                 </div>
                                 <div className="text-xs">{place.Cuisine}</div>
-                                {/* Details */}
                                 <div className="flex">
                                   <div className="flex m-2">
                                     <span className="bg-green-400 rounded-xl px-2 py-1 text-xs font-extrabold">+{place.ExtraDistance}</span>
@@ -109,6 +111,9 @@ export default function Home() {
                         </div>
                     ))}
                 </div>
+            </section> */}
+            <section className="flex min-h-screen flex-col items-center justify-between py-24">
+              <GoogleMaps isLoaded={isLoaded}/>
             </section>
         </main>
     );
