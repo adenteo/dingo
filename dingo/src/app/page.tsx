@@ -1,50 +1,147 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Locations from "./components/Locations";
 import FilterComponent from "./components/Filters";
 import GoogleMaps from "./components/GoogleMaps";
+import Places from "./components/Places";
 import { useLoadScript, Libraries } from "@react-google-maps/api";
-// import { AiFillHtml5, AiFillChrome, AiOutlineDown } from "react-icons/ai";
 
 const placesLibrary: Libraries = ["places"];
 
+// const foodPlaces = [
+//     {
+//         Name: "Food Place 1",
+//         Cuisine: "Western",
+//         Rating: 4.7,
+//         ExtraTime: 10,
+//         ExtraDistance: 0.2,
+//     },
+//     {
+//         Name: "Food Place 2",
+//         Cuisine: "Asian",
+//         Rating: 4.2,
+//         ExtraTime: 8,
+//         ExtraDistance: 0.3,
+//     },
+//     {
+//         Name: "Food Place 3",
+//         Cuisine: "Italian",
+//         Rating: 4.7,
+//         ExtraTime: 11,
+//         ExtraDistance: 0.3,
+//     },
+//     {
+//         Name: "Food Place 4",
+//         Cuisine: "Italian",
+//         Rating: 3.2,
+//         ExtraTime: 2,
+//         ExtraDistance: 0.5,
+//     },
+// ];
+
 export default function Home() {
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API ?? "",
-    libraries: placesLibrary,
-});
-    const [startLocation, setStartLocation] = useState("");
-    const [endLocation, setEndLocation] = useState("");
-    const foodPlaces = [
-        {
-            Name: "Food Place 1",
-            Cuisine: "Western",
-            Rating: 4.7,
-            ExtraTime: 10,
-            ExtraDistance: 0.2,
-        },
-        {
-            Name: "Food Place 2",
-            Cuisine: "Asian",
-            Rating: 4.2,
-            ExtraTime: 8,
-            ExtraDistance: 0.3,
-        },
-        {
-            Name: "Food Place 3",
-            Cuisine: "Italian",
-            Rating: 4.7,
-            ExtraTime: 11,
-            ExtraDistance: 0.3,
-        },
-        {
-            Name: "Food Place 4",
-            Cuisine: "Italian",
-            Rating: 3.2,
-            ExtraTime: 2,
-            ExtraDistance: 0.5,
-        },
-    ];
+    const { isLoaded } = useLoadScript({
+        googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API ?? "",
+        libraries: placesLibrary,
+    });
+    const [startLocation, setStartLocation] = useState<any>("");
+    const [endLocation, setEndLocation] = useState<any>("");
+    const [map, setMap] = useState<any>(null);
+    const [markers, setMarkers] = useState<any>([]);
+    const [waypointMarkers, setWaypointMarkers] = useState<any>([]);
+    const [waypointPlaces, setWaypointPlaces] = useState<any>([]);
+    const [route, setRoute] = useState<any>(null);
+
+    // const getNearbyPlaces = (route: any) => {
+    //     const waypoints = route["routes"][0]["overview_path"];
+    //     const nearbyService = new google.maps.places.PlacesService(map);
+    //     for (let i = 0; i < waypoints.length; i += 40) {
+    //         nearbyService.nearbySearch(
+    //             {
+    //                 location: waypoints[i],
+    //                 radius: 500,
+    //                 type: "restaurant",
+    //             },
+    //             getNearbyPlacesCallback
+    //         );
+    //     }
+    // };
+
+    const getNearbyPlaces = async (route: any) => {
+      const promises = [];
+      const waypoints = route["routes"][0]["overview_path"];
+      const nearbyService = new google.maps.places.PlacesService(map);
+      for (let i = 0; i < waypoints.length; i += 40) {
+        const promise = new Promise((resolve) => {
+          nearbyService.nearbySearch(
+            {
+              location: waypoints[i],
+              radius: 500,
+              type: "restaurant",
+            },
+            (result, status) => {
+              if (status === google.maps.places.PlacesServiceStatus.OK && result) {
+                resolve(result)
+              } else {
+                resolve([])
+              }
+            }
+          );
+        });
+    
+        promises.push(promise);
+      }
+      return Promise.all(promises)
+        .then((results) => {
+          const waypointMarkers: any = [];
+          const waypointPlaces: any = [];
+          results.forEach((result: any) => {
+            if (result) {
+              for (const place of result) {
+                const lat = place.geometry?.location?.lat();
+                const lng = place.geometry?.location?.lng();
+                waypointMarkers.push({ lat, lng });
+                waypointPlaces.push(place);
+              }
+            }
+          });
+          setWaypointMarkers(waypointMarkers);
+          setWaypointPlaces(waypointPlaces);
+        });
+    };
+
+    const calculateRoute = async () => {
+        if (startLocation === "" || endLocation === "") {
+            return;
+        }
+        const directionService = new google.maps.DirectionsService();
+        const route = await directionService.route({
+            origin: startLocation.getPlace().geometry.location,
+            destination: endLocation.getPlace().geometry.location,
+            travelMode: google.maps.TravelMode.DRIVING,
+        });
+        setRoute(route);
+        getNearbyPlaces(route);
+    };
+
+    const handleLocations = async () => {
+        const startPlace = startLocation.getPlace();
+        const endPlace = endLocation.getPlace();
+        const startPlaceLat = startPlace.geometry.location.lat();
+        const startPlaceLng = startPlace.geometry.location.lng();
+        const endPlaceLat = endPlace.geometry.location.lat();
+        const endPlaceLng = endPlace.geometry.location.lng();
+        await calculateRoute();
+        setMarkers([
+            { lat: startPlaceLat, lng: startPlaceLng },
+            { lat: endPlaceLat, lng: endPlaceLng },
+        ]);
+        const bounds = new window.google.maps.LatLngBounds();
+        bounds.extend({ lat: startPlaceLat, lng: startPlaceLng });
+        bounds.extend({ lat: endPlaceLat, lng: endPlaceLng });
+        map.fitBounds(bounds);
+        setMap(map);
+    };
 
     return (
         <main>
@@ -69,9 +166,7 @@ export default function Home() {
                 <div>
                     <button
                         className="bg-green-400 p-2 px-5 rounded-full animate-bounce"
-                        onClick={() => {
-                            console.log(startLocation, endLocation);
-                        }}
+                        onClick={handleLocations}
                     >
                         Search
                     </button>
@@ -112,8 +207,18 @@ export default function Home() {
                     ))}
                 </div>
             </section> */}
-            <section className="flex min-h-screen flex-col items-center justify-between py-24">
-              <GoogleMaps isLoaded={isLoaded}/>
+            <section className="flex min-h-screen flex-col items-center justify-center">
+                <GoogleMaps
+                    isLoaded={isLoaded}
+                    markers={markers}
+                    setMap={setMap}
+                    map={map}
+                    route={route}
+                    waypointMarkers={waypointMarkers}
+                />
+            </section>
+            <section className="flex min-h-screen flex-col items-center justify-center">
+              <Places places={waypointPlaces}/>
             </section>
         </main>
     );

@@ -1,39 +1,34 @@
 "use client";
 
 import { Dispatch, SetStateAction } from "react";
-import {
-    Autocomplete,
-} from "@react-google-maps/api";
+import { Autocomplete } from "@react-google-maps/api";
 
 interface LocationDetails {
-    startLocation: string;
-    endLocation: string;
-    setStartLocation: Dispatch<SetStateAction<string>>;
-    setEndLocation: Dispatch<SetStateAction<string>>;
+    startLocation: any;
+    endLocation: any;
+    setStartLocation: Dispatch<SetStateAction<any>>;
+    setEndLocation: Dispatch<SetStateAction<any>>;
     isLoaded: boolean;
 }
-
 
 const Locations = ({
     startLocation,
     endLocation,
     setStartLocation,
     setEndLocation,
-    isLoaded
+    isLoaded,
 }: LocationDetails) => {
-
     function onStartLoad(autocomplete: any) {
         setStartLocation(autocomplete);
     }
-    
+
     function onEndLoad(autocomplete: any) {
-      setEndLocation(autocomplete);
-  }
+        setEndLocation(autocomplete);
+    }
 
     function onStartPlaceChanged() {
         if (startLocation != null) {
-            const startPlace: any = startLocation;
-            const place = startPlace.getPlace();
+            const place = startLocation.getPlace();
             const name = place.name;
             const status = place.business_status;
             const formattedAddress = place.formatted_address;
@@ -46,19 +41,18 @@ const Locations = ({
     }
 
     function onEndPlaceChanged() {
-      if (endLocation != null) {
-          const endPlace: any = endLocation;
-          const place = endPlace.getPlace();
-          const name = place.name;
-          const status = place.business_status;
-          const formattedAddress = place.formatted_address;
-          console.log(`Name: ${name}`);
-          console.log(`Business Status: ${status}`);
-          console.log(`Formatted Address: ${formattedAddress}`);
-      } else {
-          alert("Please enter text");
-      }
-  }
+        if (endLocation != null) {
+            const place = endLocation.getPlace();
+            const name = place.name;
+            const status = place.business_status;
+            const formattedAddress = place.formatted_address;
+            console.log(`Name: ${name}`);
+            console.log(`Business Status: ${status}`);
+            console.log(`Formatted Address: ${formattedAddress}`);
+        } else {
+            alert("Please enter text");
+        }
+    }
 
     if (!isLoaded) {
         return <div>Loading...</div>;
@@ -66,7 +60,10 @@ const Locations = ({
 
     return (
         <div className="flex flex-col">
-            <Autocomplete onPlaceChanged={onStartPlaceChanged} onLoad={onStartLoad}>
+            <Autocomplete
+                onPlaceChanged={onStartPlaceChanged}
+                onLoad={onStartLoad}
+            >
                 <input
                     className=" m-3 p-3 px-4 rounded-full text-black outline-none text-base"
                     placeholder="Start Point"
