@@ -10,41 +10,43 @@ import { Dispatch, SetStateAction, useEffect } from "react";
 
 const containerStyle = {
     width: "90vw",
-    height: "90vh",
-};
-
-const center = {
-    lat: 1.4545557463846674,
-    lng: 103.81565110570433,
+    height: "25vh",
+    borderRadius: "0.25rem",
 };
 
 interface GoogleMapsProps {
     isLoaded: boolean;
-    markers: [];
+    startEndMarkers: [];
     waypointMarkers: [];
     setMap: Dispatch<SetStateAction<any>>;
     map: any;
     route: any;
+    selectedMarker: any;
 }
 
 function GoogleMaps({
     isLoaded,
-    markers,
+    startEndMarkers,
     waypointMarkers,
     setMap,
     map,
     route,
+    selectedMarker
 }: GoogleMapsProps) {
+    // const onLoad = React.useCallback(function callback(map: any) {
+    //     navigator.geolocation.getCurrentPosition((position) => {
+    //         const currLocation = {
+    //             lat: position.coords.latitude,
+    //             lng: position.coords.longitude,
+    //         };
+    //         const bounds = new window.google.maps.LatLngBounds(currLocation);
+    //         map.fitBounds(bounds);
+    //         setMap(map);
+    //     });
+    // }, []);
+
     const onLoad = React.useCallback(function callback(map: any) {
-        navigator.geolocation.getCurrentPosition((position) => {
-            const currLocation = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude,
-            };
-            const bounds = new window.google.maps.LatLngBounds(currLocation);
-            map.fitBounds(bounds);
-            setMap(map);
-        });
+        setMap(map);
     }, []);
 
     const onUnmount = React.useCallback(function callback(map: any) {
@@ -58,12 +60,21 @@ function GoogleMaps({
 
     return isLoaded ? (
         <GoogleMap
+            options={{
+                disableDefaultUI: true,
+                zoomControl: false,
+                mapTypeControl: false,
+                scaleControl: false,
+                streetViewControl: false,
+                rotateControl: false,
+                fullscreenControl: false,
+            }}
             mapContainerStyle={containerStyle}
             onLoad={onLoad}
             onUnmount={onUnmount}
             zoom={10}
         >
-            {markers?.map((marker, key) => (
+            {startEndMarkers?.map((marker, key) => (
                 <MarkerF
                     position={marker}
                     key={key}
@@ -79,8 +90,10 @@ function GoogleMaps({
                     onClick={(e) => {
                         handleMarkerClick(e.latLng?.lat(), e.latLng?.lng());
                     }}
+                    opacity={0.4}
                 ></MarkerF>
             ))}
+            {selectedMarker && <MarkerF position={selectedMarker} zIndex={9999}></MarkerF>}
             {route && (
                 <DirectionsRenderer directions={route}></DirectionsRenderer>
             )}
