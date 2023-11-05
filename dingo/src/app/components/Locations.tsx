@@ -4,10 +4,10 @@ import { Dispatch, SetStateAction } from "react";
 import { Autocomplete } from "@react-google-maps/api";
 
 interface LocationDetails {
-    startLocation: any;
-    endLocation: any;
-    setStartLocation: Dispatch<SetStateAction<any>>;
-    setEndLocation: Dispatch<SetStateAction<any>>;
+    startLocation: google.maps.places.Autocomplete | null;
+    endLocation: google.maps.places.Autocomplete | null;
+    setStartLocation: Dispatch<SetStateAction<google.maps.places.Autocomplete | null>>;
+    setEndLocation: Dispatch<SetStateAction<google.maps.places.Autocomplete| null>>;
     isLoaded: boolean;
 }
 
@@ -18,11 +18,11 @@ const Locations = ({
     setEndLocation,
     isLoaded,
 }: LocationDetails) => {
-    function onStartLoad(autocomplete: any) {
+    function onStartLoad(autocomplete: google.maps.places.Autocomplete) {
         setStartLocation(autocomplete);
     }
 
-    function onEndLoad(autocomplete: any) {
+    function onEndLoad(autocomplete: google.maps.places.Autocomplete) {
         setEndLocation(autocomplete);
     }
 
@@ -32,9 +32,6 @@ const Locations = ({
             const name = place.name;
             const status = place.business_status;
             const formattedAddress = place.formatted_address;
-            console.log(`Name: ${name}`);
-            console.log(`Business Status: ${status}`);
-            console.log(`Formatted Address: ${formattedAddress}`);
         } else {
             alert("Please enter text");
         }
@@ -46,9 +43,6 @@ const Locations = ({
             const name = place.name;
             const status = place.business_status;
             const formattedAddress = place.formatted_address;
-            console.log(`Name: ${name}`);
-            console.log(`Business Status: ${status}`);
-            console.log(`Formatted Address: ${formattedAddress}`);
         } else {
             alert("Please enter text");
         }
@@ -75,8 +69,6 @@ const Locations = ({
                     placeholder="End Destination"
                 ></input>
             </Autocomplete>
-            {/* <input className=" m-3 p-3 px-4 rounded-full text-black outline-none text-base" placeholder="Start Point" onChange={(event) => setStartLocation(event.target.value)}></input>
-    <input className=" m-3 p-3 px-4 rounded-full text-black outline-none text-base" placeholder="End Destination" onChange={(event) => setEndLocation(event.target.value)}></input> */}
         </div>
     );
 };

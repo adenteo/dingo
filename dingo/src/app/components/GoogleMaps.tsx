@@ -5,6 +5,7 @@ import {
     GoogleMap,
     Marker,
     MarkerF,
+    PolygonF,
 } from "@react-google-maps/api";
 import { Dispatch, SetStateAction, useEffect } from "react";
 
@@ -16,10 +17,10 @@ const containerStyle = {
 
 interface GoogleMapsProps {
     isLoaded: boolean;
-    startEndMarkers: [];
-    waypointMarkers: [];
-    setMap: Dispatch<SetStateAction<any>>;
-    map: any;
+    startEndMarkers: google.maps.LatLngLiteral[];
+    waypointMarkers: google.maps.LatLngLiteral[];
+    setMap: Dispatch<SetStateAction<google.maps.Map | null>>;
+    map: google.maps.Map | null;
     route: any;
     selectedMarker: any;
 }
@@ -31,7 +32,7 @@ function GoogleMaps({
     setMap,
     map,
     route,
-    selectedMarker
+    selectedMarker,
 }: GoogleMapsProps) {
     // const onLoad = React.useCallback(function callback(map: any) {
     //     navigator.geolocation.getCurrentPosition((position) => {
@@ -45,15 +46,15 @@ function GoogleMaps({
     //     });
     // }, []);
 
-    const onLoad = React.useCallback(function callback(map: any) {
+    const onLoad = React.useCallback(function callback(map: google.maps.Map) {
         setMap(map);
     }, []);
 
-    const onUnmount = React.useCallback(function callback(map: any) {
+    const onUnmount = React.useCallback(function callback(map: google.maps.Map) {
         setMap(null);
     }, []);
 
-    const handleMarkerClick = (lat: any, lng: any) => {
+    const handleMarkerClick = (lat: number, lng: number) => {
         map?.setZoom(15);
         map?.panTo({ lat, lng });
     };
@@ -79,7 +80,9 @@ function GoogleMaps({
                     position={marker}
                     key={key}
                     onClick={(e) => {
-                        handleMarkerClick(e.latLng?.lat(), e.latLng?.lng());
+                        if (e.latLng) {
+                            handleMarkerClick(e.latLng?.lat(), e.latLng?.lng());
+                        }
                     }}
                 ></MarkerF>
             ))}
@@ -88,12 +91,16 @@ function GoogleMaps({
                     position={marker}
                     key={key}
                     onClick={(e) => {
-                        handleMarkerClick(e.latLng?.lat(), e.latLng?.lng());
+                        if (e.latLng) {
+                            handleMarkerClick(e.latLng?.lat(), e.latLng?.lng());
+                        }
                     }}
                     opacity={0.4}
                 ></MarkerF>
             ))}
-            {selectedMarker && <MarkerF position={selectedMarker} zIndex={9999}></MarkerF>}
+            {selectedMarker && (
+                <MarkerF position={selectedMarker} zIndex={9999}></MarkerF>
+            )}
             {route && (
                 <DirectionsRenderer directions={route}></DirectionsRenderer>
             )}

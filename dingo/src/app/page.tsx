@@ -8,32 +8,26 @@ import { useLoadScript, Libraries } from "@react-google-maps/api";
 import { GiPathDistance } from "react-icons/gi";
 import { BiTimeFive } from "react-icons/bi";
 import { SiGooglemaps } from "react-icons/si";
+import mapUtil from "../../script/mapUtil";
 
 const placesLibrary: Libraries = ["places"];
-
-const removeDuplicatePlaceIds = (array: any) => {
-    const uniquePlaceIds = new Set<string>();
-    const uniqueObjects = array.filter((place: any) => {
-        if (!uniquePlaceIds.has(place.place_id)) {
-            uniquePlaceIds.add(place.place_id);
-            return true;
-        }
-        return false;
-    });
-
-    return Array.from(uniqueObjects);
-};
 
 export default function Home() {
     const { isLoaded } = useLoadScript({
         googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API ?? "",
         libraries: placesLibrary,
     });
-    const [startLocation, setStartLocation] = useState<any>("");
-    const [endLocation, setEndLocation] = useState<any>("");
-    const [map, setMap] = useState<any>(null);
-    const [startEndMarkers, setStartEndMarkers] = useState<any>([]);
-    const [waypointMarkers, setWaypointMarkers] = useState<any>([]);
+    const [startLocation, setStartLocation] =
+        useState<google.maps.places.Autocomplete | null>(null);
+    const [endLocation, setEndLocation] =
+        useState<google.maps.places.Autocomplete | null>(null);
+    const [map, setMap] = useState<google.maps.Map | null>(null);
+    const [startEndMarkers, setStartEndMarkers] = useState<
+        google.maps.LatLngLiteral[]
+    >([]);
+    const [waypointMarkers, setWaypointMarkers] = useState<
+        google.maps.LatLngLiteral[]
+    >([]);
     const [waypointPlaces, setWaypointPlaces] = useState<any>([]);
     const [route, setRoute] = useState<any>(null);
     const [distance, setDistance] = useState<any>(null); // text and value
@@ -42,104 +36,53 @@ export default function Home() {
     const placesRef = useRef<any>(null);
 
     useEffect(() => {
-        if (distance !== null && duration !== null && route !== null) {
-            getNearbyPlaces(route);
-        }
+        const getNearbyPlaces = async () => {
+            if (distance && duration && route && map) {
+                const { waypointMarkers, waypointPlaces } =
+                    await mapUtil.getNearbyPlaces(route, map, 2000);
+                setWaypointMarkers(waypointMarkers);
+                setWaypointPlaces(waypointPlaces);
+            }
+        };
+        getNearbyPlaces();
     }, [distance, duration, route]);
 
     useEffect(() => {
-      if (placesRef && waypointPlaces.length > 0) {
-        placesRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-    }, [waypointPlaces])
-
-    const getNearbyPlaces = async (route: any) => {
-        const waypoints = route["routes"][0]["overview_path"];
-        const nearbyService = new google.maps.places.PlacesService(map);
-        const promises = [];
-        const distancePerWaypoint = distance.value / waypoints.length;
-        const radius = 2000;
-        const interval = Math.round(radius / distancePerWaypoint);
-        for (let i = 0; i < waypoints.length; i += interval) {
-            const promise = new Promise((resolve) => {
-                nearbyService.nearbySearch(
-                    {
-                        location: waypoints[i],
-                        radius: radius,
-                        type: "restaurant",
-                    },
-                    (result, status) => {
-                        if (
-                            status ===
-                                google.maps.places.PlacesServiceStatus.OK &&
-                            result
-                        ) {
-                            resolve(result);
-                        } else {
-                            resolve([]);
-                        }
-                    }
-                );
-            });
-
-            promises.push(promise);
+        if (placesRef && waypointPlaces.length > 0) {
+            placesRef.current.scrollIntoView({ behavior: "smooth" });
         }
-        return Promise.all(promises).then((results) => {
-            let waypointMarkers: any = [];
-            let waypointPlaces: any = [];
-            results.forEach((result: any) => {
-                if (result) {
-                    for (const place of result) {
-                        waypointPlaces.push(place);
-                    }
-                }
-            });
-            waypointPlaces = removeDuplicatePlaceIds(waypointPlaces);
-            waypointPlaces.forEach((place: any) => {
-                const lat = place.geometry?.location?.lat();
-                const lng = place.geometry?.location?.lng();
-                waypointMarkers.push({ lat, lng });
-            });
-            setWaypointMarkers(waypointMarkers);
-            setWaypointPlaces(waypointPlaces);
-        });
-    };
-
-    const calculateRoute = async () => {
-        if (startLocation === "" || endLocation === "") {
-            return;
-        }
-        const directionService = new google.maps.DirectionsService();
-        const route: any = await directionService.route({
-            origin: startLocation.getPlace().geometry.location,
-            destination: endLocation.getPlace().geometry.location,
-            travelMode: google.maps.TravelMode.DRIVING,
-        });
-        const distance = route["routes"][0]["legs"][0]["distance"];
-        const duration = route["routes"][0]["legs"][0]["duration"];
-        setDistance(distance);
-        setDuration(duration);
-        setRoute(route);
-        // getNearbyPlaces() will be triggered by useEffect once distance, duration and route are set.
-    };
+    }, [waypointPlaces]);
 
     const handleLocations = async () => {
+        if (!startLocation || !endLocation || !map) {
+            return;
+        }
         const startPlace = startLocation.getPlace();
         const endPlace = endLocation.getPlace();
-        const startPlaceLat = startPlace.geometry.location.lat();
-        const startPlaceLng = startPlace.geometry.location.lng();
-        const endPlaceLat = endPlace.geometry.location.lat();
-        const endPlaceLng = endPlace.geometry.location.lng();
-        await calculateRoute();
-        setStartEndMarkers([
-            { lat: startPlaceLat, lng: startPlaceLng },
-            { lat: endPlaceLat, lng: endPlaceLng },
-        ]);
+        const startPlaceLat = startPlace.geometry?.location?.lat();
+        const startPlaceLng = startPlace.geometry?.location?.lng();
+        const endPlaceLat = endPlace.geometry?.location?.lat();
+        const endPlaceLng = endPlace.geometry?.location?.lng();
+
+        if (!startPlaceLat || !startPlaceLng || !endPlaceLat || !endPlaceLng) {
+            return;
+        }
+
+        const route = await mapUtil.getRoute(startLocation, endLocation);
+        const distance = route?.routes[0].legs[0].distance;
+        const duration = route?.routes[0].legs[0].duration;
         const bounds = new window.google.maps.LatLngBounds();
         bounds.extend({ lat: startPlaceLat, lng: startPlaceLng });
         bounds.extend({ lat: endPlaceLat, lng: endPlaceLng });
         map.fitBounds(bounds);
         setMap(map);
+        setDistance(distance);
+        setDuration(duration);
+        setRoute(route);
+        setStartEndMarkers([
+            { lat: startPlaceLat, lng: startPlaceLng },
+            { lat: endPlaceLat, lng: endPlaceLng },
+        ]);
     };
 
     return (
@@ -212,7 +155,12 @@ export default function Home() {
                         </div>
 
                         {/* <div>{endLocation.getPlace().formatted_address}</div> */}
-                        <Places places={waypointPlaces} map={map} selectedMarker={selectedMarker} setSelectedMarker={setSelectedMarker} />
+                        <Places
+                            places={waypointPlaces}
+                            map={map}
+                            selectedMarker={selectedMarker}
+                            setSelectedMarker={setSelectedMarker}
+                        />
                     </section>
                 )}
             </section>

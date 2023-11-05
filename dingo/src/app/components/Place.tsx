@@ -30,7 +30,7 @@ const Place = ({
 
     const { ref, inView } = useInView({
         /* Optional options */
-        threshold: 1,
+        threshold: 1, // must be 100% in view.
     });
 
     useEffect(() => {
