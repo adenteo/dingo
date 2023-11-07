@@ -1,4 +1,4 @@
 Add filter functionality based on rating, review count, detour distance/time
 Add trip selection. (driving, walking, cycling)
-extract out functions in page.tsx to helper class.
 customise droppins
+store same searches in localStorage.

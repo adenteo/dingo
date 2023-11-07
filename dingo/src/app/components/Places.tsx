@@ -2,10 +2,10 @@ import { Dispatch, SetStateAction, useEffect } from "react";
 import Place from "./Place";
 
 interface PlacesDetails {
-    places: [];
-    map: any;
-    selectedMarker: any;
-    setSelectedMarker: Dispatch<SetStateAction<any>>;
+    places: google.maps.places.PlaceResult[];
+    map: google.maps.Map | null;
+    selectedMarker: google.maps.LatLng;
+    setSelectedMarker: Dispatch<SetStateAction<google.maps.LatLng>>;
 }
 
 const Places = ({ places, map, setSelectedMarker, selectedMarker }: PlacesDetails) => {
@@ -15,7 +15,7 @@ const Places = ({ places, map, setSelectedMarker, selectedMarker }: PlacesDetail
 
     return (
         <div className="overflow-auto mt-4">
-            {sortedPlaces.map((place: any, key) => (
+            {sortedPlaces.map((place, key) => (
                 <Place key={key} place={place} map={map} setSelectedMarker={setSelectedMarker} selectedMarker={selectedMarker}/>
             ))}
         </div>

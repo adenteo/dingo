@@ -21,8 +21,8 @@ interface GoogleMapsProps {
     waypointMarkers: google.maps.LatLngLiteral[];
     setMap: Dispatch<SetStateAction<google.maps.Map | null>>;
     map: google.maps.Map | null;
-    route: any;
-    selectedMarker: any;
+    route: google.maps.DirectionsResult | undefined;
+    selectedMarker: google.maps.LatLng;
 }
 
 function GoogleMaps({

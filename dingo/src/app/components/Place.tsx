@@ -2,10 +2,10 @@ import { Dispatch, SetStateAction, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 
 interface PlaceDetails {
-    place: any;
-    map: any;
-    setSelectedMarker: Dispatch<SetStateAction<any>>;
-    selectedMarker: any;
+    place: google.maps.places.PlaceResult,
+    map: google.maps.Map | null;
+    setSelectedMarker: Dispatch<SetStateAction<google.maps.LatLng>>;
+    selectedMarker: google.maps.LatLng;
 }
 
 const Place = ({
@@ -14,18 +14,17 @@ const Place = ({
     setSelectedMarker,
     selectedMarker,
 }: PlaceDetails) => {
-    const handlePlaceClicked = (place: any) => {
+    const handlePlaceClicked = (place: google.maps.places.PlaceResult) => {
         // window.open(
         //     "https://www.google.com/maps/search/?api=1&query=<address>&query_place_id=" +
         //         placeId
         // );
-        const markerLatLng = {
-            lat: place["geometry"]["location"].lat(),
-            lng: place["geometry"]["location"].lng(),
-        };
-        setSelectedMarker(markerLatLng);
-        map.setZoom(15);
-        map.panTo(markerLatLng);
+        const markerLatLng = place.geometry?.location
+        if (markerLatLng) {
+          setSelectedMarker(markerLatLng);
+          map?.setZoom(15);
+          map?.panTo(markerLatLng);
+        }
     };
 
     const { ref, inView } = useInView({
@@ -41,8 +40,8 @@ const Place = ({
 
     const isSelectedPlace =
         selectedMarker &&
-        selectedMarker.lat === place["geometry"]["location"].lat() &&
-        selectedMarker.lng === place["geometry"]["location"].lng();
+        selectedMarker.lat() === place.geometry?.location?.lat() &&
+        selectedMarker.lng() === place.geometry?.location?.lng();
 
     return (
         <div

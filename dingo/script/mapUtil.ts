@@ -41,7 +41,48 @@ const removeDuplicatePlaceIds = (array: google.maps.places.PlaceResult[]) => {
     return Array.from(uniqueObjects);
 };
 
-const getNearbyPlaces = async (
+const getNearbyPlacesFromBounds = async (
+    bounds: google.maps.LatLngBounds,
+    map: google.maps.Map
+) => {
+    const nearbyService = new google.maps.places.PlacesService(map);
+    const promise: Promise<google.maps.places.PlaceResult[]> = new Promise(
+        (resolve) => {
+            nearbyService.nearbySearch(
+                {
+                    bounds: bounds,
+                    type: "restaurant",
+                },
+                (result, status) => {
+                    if (
+                        status === google.maps.places.PlacesServiceStatus.OK &&
+                        result
+                    ) {
+                        resolve(result);
+                    } else {
+                        resolve([]);
+                    }
+                }
+            );
+        }
+    );
+    return promise.then((results) => {
+        let waypointMarkers: google.maps.LatLngLiteral[] = [];
+        const filteredResults = removeDuplicatePlaceIds(results);
+        filteredResults.forEach((place) => {
+            const lat = place.geometry?.location?.lat();
+            const lng = place.geometry?.location?.lng();
+            if (lat && lng) {
+                waypointMarkers.push({ lat, lng });
+            }
+        });
+        return waypointMarkers;
+    });
+};
+
+
+
+const getNearbyPlacesFromRoute = async (
     route: google.maps.DirectionsResult,
     map: google.maps.Map,
     radius: number
@@ -49,29 +90,27 @@ const getNearbyPlaces = async (
     const waypoints = route["routes"][0]["overview_path"];
     const nearbyService = new google.maps.places.PlacesService(map);
     const promises = [];
-    for (let i = 0; i < waypoints.length; i += 40) {
-        const promise: Promise<google.maps.places.PlaceResult[]> = new Promise(
-            (resolve) => {
-                nearbyService.nearbySearch(
-                    {
-                        location: waypoints[i],
-                        radius: radius,
-                        type: "restaurant",
-                    },
-                    (result, status) => {
-                        if (
-                            status ===
-                                google.maps.places.PlacesServiceStatus.OK &&
-                            result
-                        ) {
-                            resolve(result);
-                        } else {
-                            resolve([]);
-                        }
+    for (let i = 0; i < waypoints.length; i += 10) {
+        const promise: Promise<google.maps.places.PlaceResult[]> = new Promise((resolve) => {
+            nearbyService.nearbySearch(
+                {
+                    location: waypoints[i],
+                    radius: radius,
+                    type: "restaurant",
+                },
+                (result, status) => {
+                    if (
+                        status === google.maps.places.PlacesServiceStatus.OK &&
+                        result
+                    ) {
+                        console.log(result);
+                        resolve(result);
+                    } else {
+                        resolve([]);
                     }
-                );
-            }
-        );
+                }
+            );
+        });
         promises.push(promise);
     }
     return Promise.all(promises).then((results) => {
@@ -116,5 +155,14 @@ const getRoute = async (
     // getNearbyPlaces() will be triggered by useEffect once distance, duration and route are set.
 };
 
+// const getShortestDistanceToRoute = (point, route: google.maps.places.) => {
 
-export default { getExtendedPolygon, removeDuplicatePlaceIds, getNearbyPlaces, getRoute };
+// }
+
+export default {
+    getExtendedPolygon,
+    removeDuplicatePlaceIds,
+    getNearbyPlacesFromRoute,
+    getNearbyPlacesFromBounds,
+    getRoute,
+};

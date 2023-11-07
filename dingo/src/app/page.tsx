@@ -28,8 +28,8 @@ export default function Home() {
     const [waypointMarkers, setWaypointMarkers] = useState<
         google.maps.LatLngLiteral[]
     >([]);
-    const [waypointPlaces, setWaypointPlaces] = useState<any>([]);
-    const [route, setRoute] = useState<any>(null);
+    const [waypointPlaces, setWaypointPlaces] = useState<google.maps.places.PlaceResult[]>([]);
+    const [route, setRoute] = useState<google.maps.DirectionsResult | undefined>(undefined);
     const [distance, setDistance] = useState<any>(null); // text and value
     const [duration, setDuration] = useState<any>(null); // text and value
     const [selectedMarker, setSelectedMarker] = useState<any>(null);
@@ -39,7 +39,7 @@ export default function Home() {
         const getNearbyPlaces = async () => {
             if (distance && duration && route && map) {
                 const { waypointMarkers, waypointPlaces } =
-                    await mapUtil.getNearbyPlaces(route, map, 2000);
+                    await mapUtil.getNearbyPlacesFromRoute(route, map, 2000);
                 setWaypointMarkers(waypointMarkers);
                 setWaypointPlaces(waypointPlaces);
             }
