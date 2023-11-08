@@ -1,3 +1,5 @@
+import haversineDistance from "haversine-distance";
+
 const getExtendedPolygon = (waypoints: Array<any>, radius: number) => {
     const R = 6378137;
     const pi = 3.14;
@@ -80,8 +82,6 @@ const getNearbyPlacesFromBounds = async (
     });
 };
 
-
-
 const getNearbyPlacesFromRoute = async (
     route: google.maps.DirectionsResult,
     map: google.maps.Map,
@@ -91,26 +91,29 @@ const getNearbyPlacesFromRoute = async (
     const nearbyService = new google.maps.places.PlacesService(map);
     const promises = [];
     for (let i = 0; i < waypoints.length; i += 10) {
-        const promise: Promise<google.maps.places.PlaceResult[]> = new Promise((resolve) => {
-            nearbyService.nearbySearch(
-                {
-                    location: waypoints[i],
-                    radius: radius,
-                    type: "restaurant",
-                },
-                (result, status) => {
-                    if (
-                        status === google.maps.places.PlacesServiceStatus.OK &&
-                        result
-                    ) {
-                        console.log(result);
-                        resolve(result);
-                    } else {
-                        resolve([]);
+        const promise: Promise<google.maps.places.PlaceResult[]> = new Promise(
+            (resolve) => {
+                nearbyService.nearbySearch(
+                    {
+                        location: waypoints[i],
+                        radius: radius,
+                        type: "restaurant",
+                    },
+                    (result, status) => {
+                        if (
+                            status ===
+                                google.maps.places.PlacesServiceStatus.OK &&
+                            result
+                        ) {
+                            console.log(result);
+                            resolve(result);
+                        } else {
+                            resolve([]);
+                        }
                     }
-                }
-            );
-        });
+                );
+            }
+        );
         promises.push(promise);
     }
     return Promise.all(promises).then((results) => {
@@ -131,33 +134,61 @@ const getNearbyPlacesFromRoute = async (
                 waypointMarkers.push({ lat, lng });
             }
         });
+        // const updatedWaypointPlaces = waypointPlaces.map((place) => {
+        //     const lat = place.geometry?.location?.lat();
+        //     const lng = place.geometry?.location?.lng();
+        //     if (lat && lng) {
+        //         const shortestDistanceToRoute = getShortestDistanceToRoute(
+        //             { lat, lng },
+        //             waypoints
+        //         );
+        //         console.log(shortestDistanceToRoute);
+        //         const updatedPlace: any = { ...place };
+        //         updatedPlace["shortestDistance"] = shortestDistanceToRoute;
+        //         return updatedPlace;
+        //     }
+        // });
         return { waypointMarkers, waypointPlaces };
     });
 };
 
 const getRoute = async (
     startLocation: google.maps.places.Autocomplete,
-    endLocation: google.maps.places.Autocomplete
+    endLocation: google.maps.places.Autocomplete,
+    transitMode: google.maps.TravelMode | null
 ) => {
     const origin = startLocation.getPlace().geometry?.location;
     const destination = endLocation.getPlace().geometry?.location;
 
-    if (!origin || !destination) {
+    if (!origin || !destination || !transitMode) {
         return;
     }
     const directionService = new google.maps.DirectionsService();
     const route = await directionService.route({
         origin: origin,
         destination: destination,
-        travelMode: google.maps.TravelMode.DRIVING,
+        travelMode: transitMode
     });
     return route;
     // getNearbyPlaces() will be triggered by useEffect once distance, duration and route are set.
 };
 
-// const getShortestDistanceToRoute = (point, route: google.maps.places.) => {
-
-// }
+const getShortestDistanceToRoute = (
+    point: google.maps.LatLngLiteral,
+    route: google.maps.LatLng[]
+) => {
+    let shortestDistance = 2000;
+    for (const waypoint of route) {
+        const distance = haversineDistance(point, {
+            lat: waypoint.lat(),
+            lng: waypoint.lng(),
+        });
+        if (distance < shortestDistance) {
+            shortestDistance = distance;
+        }
+    }
+    return shortestDistance;
+};
 
 export default {
     getExtendedPolygon,
@@ -165,4 +196,5 @@ export default {
     getNearbyPlacesFromRoute,
     getNearbyPlacesFromBounds,
     getRoute,
+    getShortestDistanceToRoute,
 };

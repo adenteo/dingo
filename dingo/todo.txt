@@ -2,3 +2,4 @@ Add filter functionality based on rating, review count, detour distance/time
 Add trip selection. (driving, walking, cycling)
 customise droppins
 store same searches in localStorage.
+Fix null returns in abstract function.

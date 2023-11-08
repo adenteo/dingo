@@ -4,6 +4,7 @@ import Locations from "./components/Locations";
 import FilterComponent from "./components/Filters";
 import GoogleMaps from "./components/GoogleMaps";
 import Places from "./components/Places";
+import TransitMode from "./components/TransitMode";
 import { useLoadScript, Libraries } from "@react-google-maps/api";
 import { GiPathDistance } from "react-icons/gi";
 import { BiTimeFive } from "react-icons/bi";
@@ -28,11 +29,16 @@ export default function Home() {
     const [waypointMarkers, setWaypointMarkers] = useState<
         google.maps.LatLngLiteral[]
     >([]);
-    const [waypointPlaces, setWaypointPlaces] = useState<google.maps.places.PlaceResult[]>([]);
-    const [route, setRoute] = useState<google.maps.DirectionsResult | undefined>(undefined);
-    const [distance, setDistance] = useState<any>(null); // text and value
-    const [duration, setDuration] = useState<any>(null); // text and value
+    const [waypointPlaces, setWaypointPlaces] = useState<
+        google.maps.places.PlaceResult[]
+    >([]);
+    const [route, setRoute] = useState<
+        google.maps.DirectionsResult | undefined
+    >(undefined);
+    const [distance, setDistance] = useState<google.maps.Distance | undefined>(undefined); // text and value
+    const [duration, setDuration] = useState<google.maps.Duration | undefined>(undefined); // text and value
     const [selectedMarker, setSelectedMarker] = useState<any>(null);
+    const [transitMode, setTransitMode] = useState<google.maps.TravelMode | null>(null);
     const placesRef = useRef<any>(null);
 
     useEffect(() => {
@@ -68,7 +74,7 @@ export default function Home() {
             return;
         }
 
-        const route = await mapUtil.getRoute(startLocation, endLocation);
+        const route = await mapUtil.getRoute(startLocation, endLocation, transitMode);
         const distance = route?.routes[0].legs[0].distance;
         const duration = route?.routes[0].legs[0].duration;
         const bounds = new window.google.maps.LatLngBounds();
@@ -97,13 +103,21 @@ export default function Home() {
                         Dine on the go.
                     </h2>
                 </div>
-                <Locations
-                    startLocation={startLocation}
-                    endLocation={endLocation}
-                    setStartLocation={setStartLocation}
-                    setEndLocation={setEndLocation}
-                    isLoaded={isLoaded}
-                ></Locations>
+                <div>
+                    <Locations
+                        startLocation={startLocation}
+                        endLocation={endLocation}
+                        setStartLocation={setStartLocation}
+                        setEndLocation={setEndLocation}
+                        isLoaded={isLoaded}
+                    ></Locations>
+                    <TransitMode
+                        transitMode={transitMode}
+                        setTransitMode={setTransitMode}
+                        isLoaded={isLoaded}
+                    />
+                </div>
+
                 {/* <FilterComponent filters={["Asian", "Western"]}/> */}
                 <div>
                     <button
@@ -139,11 +153,11 @@ export default function Home() {
                         <div className="flex mt-4">
                             <div className="flex items-center text-xs">
                                 <GiPathDistance size={20} className="mx-2" />
-                                {distance.text}
+                                {distance?.text}
                             </div>
                             <div className="flex items-center text-xs">
                                 <BiTimeFive size={20} className="mx-2" />
-                                {duration.text}
+                                {duration?.text}
                             </div>
                         </div>
                         <div className="flex items-center justify-center">

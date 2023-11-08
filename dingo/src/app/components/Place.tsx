@@ -77,6 +77,8 @@ const Place = ({
                     )}
                 </div>
                 <div className="mx-2 mb-2 text-xs truncate">{place.vicinity}</div>
+                {/* <div className="mx-2 mb-2 text-xs truncate">~{place.shortestDistance}</div> */}
+                
             </div>
         </div>
     );

@@ -6,8 +6,12 @@ import { Autocomplete } from "@react-google-maps/api";
 interface LocationDetails {
     startLocation: google.maps.places.Autocomplete | null;
     endLocation: google.maps.places.Autocomplete | null;
-    setStartLocation: Dispatch<SetStateAction<google.maps.places.Autocomplete | null>>;
-    setEndLocation: Dispatch<SetStateAction<google.maps.places.Autocomplete| null>>;
+    setStartLocation: Dispatch<
+        SetStateAction<google.maps.places.Autocomplete | null>
+    >;
+    setEndLocation: Dispatch<
+        SetStateAction<google.maps.places.Autocomplete | null>
+    >;
     isLoaded: boolean;
 }
 
