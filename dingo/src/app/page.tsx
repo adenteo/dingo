@@ -149,7 +149,6 @@ export default function Home() {
                         className="flex flex-col items-center justify-center max-h-[75vh]"
                         ref={placesRef}
                     >
-                        {/* <div>{startLocation.getPlace().formatted_address}</div> */}
                         <div className="flex mt-4">
                             <div className="flex items-center text-xs">
                                 <GiPathDistance size={20} className="mx-2" />
@@ -174,6 +173,7 @@ export default function Home() {
                             map={map}
                             selectedMarker={selectedMarker}
                             setSelectedMarker={setSelectedMarker}
+                            route={route}
                         />
                     </section>
                 )}

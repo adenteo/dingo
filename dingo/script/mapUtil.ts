@@ -190,6 +190,27 @@ const getShortestDistanceToRoute = (
     return shortestDistance;
 };
 
+const formatDistance = (distanceInMeters: number | undefined) => {
+  if (!distanceInMeters) {
+    return;
+  }
+  const distanceNearestHundred = Math.ceil(distanceInMeters/100) * 100
+  if (distanceNearestHundred >= 1000) {
+    const distanceInKilometers = Math.ceil(distanceNearestHundred / 100) / 10;
+    return distanceInKilometers + ' km';
+  } else {
+    const roundedDistance = Math.ceil(distanceNearestHundred / 100) * 100;
+    return roundedDistance + ' m';
+  }
+}
+
+const getPlaceDetails = (map: google.maps.Map, placeDetailsRequest: google.maps.places.PlaceDetailsRequest, setPlaceResult: any) => {
+  const placesService = map && new google.maps.places.PlacesService(map);
+  placesService.getDetails((placeDetailsRequest), (result) => {
+    setPlaceResult(result)
+  } )
+}
+
 export default {
     getExtendedPolygon,
     removeDuplicatePlaceIds,
@@ -197,4 +218,6 @@ export default {
     getNearbyPlacesFromBounds,
     getRoute,
     getShortestDistanceToRoute,
+    getPlaceDetails,
+    formatDistance,
 };
