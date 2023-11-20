@@ -1,24 +1,26 @@
+import { PriceLevel } from "../../../script/mapUtil";
+
 interface PriceDetails {
-    price_level: number;
+    priceLevel: string;
 }
 
-const PriceIndicator = ({ price_level }: PriceDetails) => {
-    const getPriceSigns = (price_level: number) => {
-        switch (price_level) {
-            case 1:
+const PriceIndicator = ({ priceLevel }: PriceDetails) => {
+    const getPriceSigns = (level: string) => {
+        switch (level) {
+            case PriceLevel.PRICE_LEVEL_INEXPENSIVE:
                 return "$";
-            case 2:
+            case PriceLevel.PRICE_LEVEL_MODERATE:
                 return "$$";
-            case 3:
+            case PriceLevel.PRICE_LEVEL_EXPENSIVE:
                 return "$$$";
-            case 4:
+            case PriceLevel.PRICE_LEVEL_VERY_EXPENSIVE:
                 return "$$$$";
             default:
                 return "Invalid Price";
         }
     };
 
-    return <div className="mt-2 ml-2 mb-2 text-xs font-semibold bg-green-400 w-fit p-1 px-2 rounded-full">{getPriceSigns(price_level)}</div>;
+    return <div className="mt-2 ml-2 mb-2 text-xs font-semibold bg-green-500 w-fit p-1 px-2 rounded-full">{getPriceSigns(priceLevel)}</div>;
 };
 
 export default PriceIndicator;

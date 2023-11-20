@@ -8,8 +8,11 @@ import TransitMode from "./components/TransitMode";
 import { useLoadScript, Libraries } from "@react-google-maps/api";
 import { GiPathDistance } from "react-icons/gi";
 import { BiTimeFive } from "react-icons/bi";
-import { SiGooglemaps } from "react-icons/si";
-import mapUtil from "../../script/mapUtil";
+import { TbBrandGoogleMaps } from "react-icons/tb";
+import mapUtil, { PlacesV2 } from "../../script/mapUtil";
+import DetourDistanceSlider from "./components/DetourDistanceSlider";
+import { Spinner } from "@chakra-ui/react";
+import SortMenu from "./components/SortMenu";
 
 const placesLibrary: Libraries = ["places"];
 
@@ -29,25 +32,39 @@ export default function Home() {
     const [waypointMarkers, setWaypointMarkers] = useState<
         google.maps.LatLngLiteral[]
     >([]);
-    const [waypointPlaces, setWaypointPlaces] = useState<
-        google.maps.places.PlaceResult[]
-    >([]);
+    const [waypointPlaces, setWaypointPlaces] = useState<PlacesV2[]>([]);
     const [route, setRoute] = useState<
         google.maps.DirectionsResult | undefined
     >(undefined);
-    const [distance, setDistance] = useState<google.maps.Distance | undefined>(undefined); // text and value
-    const [duration, setDuration] = useState<google.maps.Duration | undefined>(undefined); // text and value
-    const [selectedMarker, setSelectedMarker] = useState<any>(null);
-    const [transitMode, setTransitMode] = useState<google.maps.TravelMode | null>(null);
+    const [distance, setDistance] = useState<google.maps.Distance | undefined>(
+        undefined
+    ); // text and value
+    const [duration, setDuration] = useState<google.maps.Duration | undefined>(
+        undefined
+    ); // text and value
+    const [selectedMarker, setSelectedMarker] =
+        useState<google.maps.LatLngLiteral | null>(null);
+    const [transitMode, setTransitMode] =
+        useState<google.maps.TravelMode | null>(null);
+    const [tripList, setTripList] = useState<PlacesV2[]>([]);
     const placesRef = useRef<any>(null);
+    const [detourDistance, setDetourDistance] = useState(5);
+    const [placesLoading, setPlacesLoading] = useState(false);
+    const [sortPlacesBy, setSortPlacesBy] = useState<string | null>(null);
 
     useEffect(() => {
         const getNearbyPlaces = async () => {
             if (distance && duration && route && map) {
-                const { waypointMarkers, waypointPlaces } =
-                    await mapUtil.getNearbyPlacesFromRoute(route, map, 2000);
-                setWaypointMarkers(waypointMarkers);
+                setPlacesLoading(true);
+                const { waypointPlaces, waypointLocations } =
+                    await mapUtil.getNearbyPlacesFromRoute(
+                        route,
+                        detourDistance * 1000
+                    );
+                console.log(waypointPlaces);
+                setWaypointMarkers(waypointLocations);
                 setWaypointPlaces(waypointPlaces);
+                setPlacesLoading(false);
             }
         };
         getNearbyPlaces();
@@ -59,10 +76,45 @@ export default function Home() {
         }
     }, [waypointPlaces]);
 
+    const handleOpenInGmaps = () => {
+        if (
+            !startLocation ||
+            !endLocation ||
+            tripList.length === 0 ||
+            !transitMode
+        ) {
+            return;
+        }
+        const startPlace = startLocation.getPlace();
+        const endPlace = endLocation.getPlace();
+        mapUtil.getGoogleMapsUrl(startPlace, endPlace, tripList, transitMode);
+    };
+
+    const handleAddToTrip = (place: PlacesV2, addToTrip: boolean) => {
+        if (addToTrip) {
+            // Add to the trip list
+            const newTripList = [...tripList, place];
+            setTripList(newTripList);
+            return newTripList.length; // Return the order
+        } else {
+            // Remove from the trip list
+            const newTripList = tripList.filter((p: PlacesV2) => p !== place);
+            setTripList(newTripList);
+            return null;
+        }
+    };
+
     const handleLocations = async () => {
+        setTripList([]);
+        setStartEndMarkers([]);
+        setWaypointMarkers([]);
+        setWaypointPlaces([]);
+        setSortPlacesBy(null);
+
         if (!startLocation || !endLocation || !map) {
             return;
         }
+        console.log(startLocation);
         const startPlace = startLocation.getPlace();
         const endPlace = endLocation.getPlace();
         const startPlaceLat = startPlace.geometry?.location?.lat();
@@ -74,7 +126,11 @@ export default function Home() {
             return;
         }
 
-        const route = await mapUtil.getRoute(startLocation, endLocation, transitMode);
+        const route = await mapUtil.getRoute(
+            startLocation,
+            endLocation,
+            transitMode
+        );
         const distance = route?.routes[0].legs[0].distance;
         const duration = route?.routes[0].legs[0].duration;
         const bounds = new window.google.maps.LatLngBounds();
@@ -116,21 +172,30 @@ export default function Home() {
                         setTransitMode={setTransitMode}
                         isLoaded={isLoaded}
                     />
+                    {isLoaded && (
+                        <div className="w-48 mx-auto mt-10">
+                            <div className="text-center mb-2">Max Detour</div>
+                            <DetourDistanceSlider setDetourDistance={setDetourDistance} detourDistance={detourDistance}/>
+                            <div className="text-center mt-2">
+                                {detourDistance} km
+                            </div>
+                        </div>
+                    )}
                 </div>
-
-                {/* <FilterComponent filters={["Asian", "Western"]}/> */}
                 <div>
                     <button
-                        className="bg-green-400 p-2 px-5 rounded-full animate-bounce text-xl font-semibold"
+                        className="bg-gradient-to-br from-green-400 to-green-600 flex
+                       p-2 px-5 rounded-xl text-xl font-semibold 
+                       transform transition-transform hover:scale-110"
                         onClick={handleLocations}
                     >
-                        Go!
+                        {placesLoading ? <Spinner /> : "Go!"}
                     </button>
                 </div>
             </section>
-            <section className="flex flex-col items-center justify-center">
-                <section
-                    className={`flex flex-col items-center justify-center max-h-[25vh] ${
+            <section className="flex flex-col items-center justify-center max-h-screen">
+                <div
+                    className={`flex flex-col items-center justify-center h-[25vh] ${
                         startEndMarkers.length > 0 ? "" : "hidden"
                     }`}
                 >
@@ -143,39 +208,47 @@ export default function Home() {
                         waypointMarkers={waypointMarkers}
                         selectedMarker={selectedMarker}
                     />
-                </section>
+                </div>
                 {waypointPlaces.length > 0 && (
-                    <section
-                        className="flex flex-col items-center justify-center max-h-[75vh]"
+                    <div
+                        className="flex flex-col items-center justify-center h-[75vh]"
                         ref={placesRef}
                     >
-                        <div className="flex mt-4">
-                            <div className="flex items-center text-xs">
-                                <GiPathDistance size={20} className="mx-2" />
-                                {distance?.text}
+                        <div className="my-4">
+                            <div className="flex justify-center">
+                                <div className="flex items-center text-xs">
+                                    <GiPathDistance
+                                        size={20}
+                                        className="mx-2"
+                                    />
+                                    {distance?.text}
+                                </div>
+                                <div className="flex items-center text-xs">
+                                    <BiTimeFive size={20} className="mx-2" />
+                                    {duration?.text}
+                                </div>
                             </div>
-                            <div className="flex items-center text-xs">
-                                <BiTimeFive size={20} className="mx-2" />
-                                {duration?.text}
-                            </div>
+                            <SortMenu setSortPlacesBy={setSortPlacesBy} sortPlacesBy={sortPlacesBy}/>
                         </div>
-                        <div className="flex items-center justify-center">
-                            <SiGooglemaps />
-                            <div className="font-bold text-green-500 mx-2">
-                                {waypointPlaces.length}
-                            </div>
-                            <div>locations found.</div>
-                        </div>
-
-                        {/* <div>{endLocation.getPlace().formatted_address}</div> */}
+                        {tripList.length > 0 && (
+                            <button
+                                onClick={handleOpenInGmaps}
+                                className="flex justify-center items-center p-3 mb-4 bg-green-500 rounded-xl text-black font-semibold text-xs"
+                            >
+                                Open trip in <TbBrandGoogleMaps size={20} />
+                            </button>
+                        )}
                         <Places
                             places={waypointPlaces}
                             map={map}
                             selectedMarker={selectedMarker}
                             setSelectedMarker={setSelectedMarker}
                             route={route}
+                            onAddToTrip={handleAddToTrip}
+                            tripList={tripList}
+                            sortPlacesBy={sortPlacesBy}
                         />
-                    </section>
+                    </div>
                 )}
             </section>
         </main>

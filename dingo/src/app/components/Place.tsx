@@ -1,14 +1,19 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import mapUtil from "../../../script/mapUtil";
+import mapUtil, { PlacesV2 } from "../../../script/mapUtil";
 import PriceIndicator from "./PriceIndicator";
+import { LuVegan } from "react-icons/lu";
+import { Badge } from "@chakra-ui/react";
 
 interface PlaceDetails {
-    place: google.maps.places.PlaceResult;
+    place: PlacesV2;
     map: google.maps.Map | null;
-    setSelectedMarker: Dispatch<SetStateAction<google.maps.LatLng>>;
-    selectedMarker: google.maps.LatLng;
-    shortestDistanceToRoute: number | undefined;
+    setSelectedMarker: Dispatch<
+        SetStateAction<google.maps.LatLngLiteral | null>
+    >;
+    selectedMarker: google.maps.LatLngLiteral | null;
+    onAddToTrip: (a: PlacesV2, b: boolean) => number | null;
+    tripList: PlacesV2[];
 }
 
 const Place = ({
@@ -16,17 +21,62 @@ const Place = ({
     map,
     setSelectedMarker,
     selectedMarker,
-    shortestDistanceToRoute,
+    onAddToTrip,
+    tripList,
 }: PlaceDetails) => {
-    const [placeResult, setPlaceResult] =
-        useState<google.maps.places.PlaceResult | null>(null);
+    const [isAdded, setIsAdded] = useState(false);
+    const [order, setOrder] = useState<number>(0);
+    const [placePhotoUrl, setPlacePhotoUrl] = useState("");
 
-    const handlePlaceClicked = (place: google.maps.places.PlaceResult) => {
+    useEffect(() => {
+        const fetchPhotoUrl = async () => {
+            try {
+                const url = await mapUtil.getPlaceImageUrl(
+                    place.photos[0].name
+                );
+                setPlacePhotoUrl(url);
+            } catch (error) {
+                console.error("Error fetching photo URL:", error);
+            }
+        };
+
+        fetchPhotoUrl();
+    }, []);
+
+    const handleAddToTrip = () => {
+        if (isAdded) {
+            // If already added, remove from the list
+            onAddToTrip(place, false);
+            setIsAdded(false);
+            setOrder(0);
+        } else {
+            // If not added, add to the list
+            const order = onAddToTrip(place, true);
+            setIsAdded(true);
+            if (order) setOrder(order);
+        }
+    };
+
+    useEffect(() => {
+        let newOrder = 1;
+        for (const item of tripList) {
+            if (item !== place) {
+                newOrder += 1;
+            } else {
+                setOrder(newOrder);
+            }
+        }
+    }, [tripList]);
+
+    const handlePlaceClicked = (place: PlacesV2) => {
         // window.open(
         //     "https://www.google.com/maps/search/?api=1&query=<address>&query_place_id=" +
         //         placeId
         // );
-        const markerLatLng = place.geometry?.location;
+        const markerLatLng = {
+            lat: place.location.latitude,
+            lng: place.location.longitude,
+        };
         if (markerLatLng) {
             setSelectedMarker(markerLatLng);
             map?.setZoom(15);
@@ -35,13 +85,7 @@ const Place = ({
     };
 
     const handlePlaceTitleClicked = () => {
-        if (placeResult) {
-            if (placeResult.website) {
-                window.open(placeResult.website);
-            } else if (placeResult.url) {
-                window.open(placeResult.url);
-            }
-        }
+        window.open(place.googleMapsUri);
     };
 
     const { ref, inView } = useInView({
@@ -57,24 +101,25 @@ const Place = ({
 
     const isSelectedPlace =
         selectedMarker &&
-        selectedMarker.lat() === place.geometry?.location?.lat() &&
-        selectedMarker.lng() === place.geometry?.location?.lng();
+        selectedMarker.lat === place.location.latitude &&
+        selectedMarker.lng === place.location.longitude;
 
     const shortestDistanceToRouteFormatted = mapUtil.formatDistance(
-        shortestDistanceToRoute
+        place.detourDistance
     );
 
-    useEffect(() => {
-        // Call getPlaceDetails with your map and request
-        if (map && place.place_id) {
-            const request = {
-                placeId: place.place_id,
-            };
-            mapUtil.getPlaceDetails(map, request, setPlaceResult);
-        } else {
-            console.log("nah");
-        }
-    }, []);
+    // useEffect(() => {
+    //     // Call getPlaceDetails with your map and request
+    //     if (map && place.place_id && !placeResult) {
+    //         const request = {
+    //             placeId: place.place_id,
+    //         };
+    //         console.log("DOING THIS");
+    //         mapUtil.getPlaceDetails(map, request, setPlaceResult);
+    //     } else {
+    //         console.log("nah");
+    //     }
+    // }, [place.place_id]);
 
     return (
         <div
@@ -83,14 +128,21 @@ const Place = ({
                 handlePlaceClicked(place);
             }}
             className={`bg-white text-black rounded w-[90vw] flex flex-col mb-10 ${
-                isSelectedPlace && "border-green-700 border-t-8"
+                isSelectedPlace && "border-slate-500 border-t-4"
             }`}
         >
-            <div className="w-auto h-[20vh]">
-                <img
-                    src={place.photos?.[0].getUrl()}
-                    className="w-full h-full rounded-tl rounded-tr"
-                ></img>
+            <div className="w-auto h-[20vh] relative">
+                <img src={placePhotoUrl} className="w-full h-full"></img>
+                <div
+                    className={`absolute top-4 right-2 text-xs rounded-full ${
+                        isAdded
+                            ? "bg-green-500 text-black w-8 h-8 border-white border-2 justify-center flex items-center font-bold"
+                            : "bg-gray-800 text-white p-2 font-semibold"
+                    }`}
+                    onClick={handleAddToTrip}
+                >
+                    {isAdded ? order : "Add to Trip"}
+                </div>
             </div>
             {/* <div>{inView ? "true" : "false"}</div> */}
             <div className="mt-2">
@@ -99,7 +151,7 @@ const Place = ({
                         onClick={handlePlaceTitleClicked}
                         className="font-bold truncate hover:text-green-500 hover:cursor-pointer"
                     >
-                        {place.name}
+                        {place.displayName.text}
                     </div>
                     {place.rating ? (
                         <div className="flex">
@@ -107,7 +159,7 @@ const Place = ({
                                 {place.rating}
                             </div>
                             <div className="font-semibold text-xs flex items-center justify-center">
-                                {`(${place.user_ratings_total})`}
+                                {`(${place.userRatingCount})`}
                             </div>
                         </div>
                     ) : (
@@ -116,19 +168,47 @@ const Place = ({
                         </div>
                     )}
                 </div>
+                {place.currentOpeningHours?.openNow ? (
+                    <Badge variant='solid' colorScheme='green' className="mx-2">
+                    Open
+                  </Badge>
+                ) : (
+                  <Badge variant='solid' colorScheme='red' className="mx-2 text-xs">
+                  Closed
+                </Badge>
+                )}
+                {place.primaryType && (
+                    <div className="text-xs font-semibold mx-2">
+                        {mapUtil.formatPrimaryType(place.primaryType)}
+                    </div>
+                )}
+
+                {place.editorialSummary && (
+                    <div className="text-xs mx-2 my-2">
+                        {place.editorialSummary.text}
+                    </div>
+                )}
                 <div className="flex">
-                    {place.price_level && (
-                        <PriceIndicator price_level={place.price_level} />
+                    {place.priceLevel && (
+                        <PriceIndicator priceLevel={place.priceLevel} />
                     )}
-                    {shortestDistanceToRoute && (
+                    {shortestDistanceToRouteFormatted && (
                         <div className="mt-2 mx-2 mb-2 text-xs font-semibold bg-slate-300 w-fit p-1 rounded-full ">
                             ~ {shortestDistanceToRouteFormatted}
                         </div>
                     )}
+                    {place.servesVegetarianFood && (
+                        <div className="bg-green-700 mt-2 mb-2 text-xs font-semibold w-fit p-1 rounded-full">
+                            <LuVegan size={15} />
+                        </div>
+                    )}
                 </div>
                 <div className="mx-2 mb-2 text-xs truncate">
-                    {place.vicinity}
+                    {place.formattedAddress}
                 </div>
+                {/* <div className="mx-2 mb-2 text-xs p-2 bg-green-500 rounded-xl">
+                    Add to trip
+                </div> */}
             </div>
         </div>
     );

@@ -22,7 +22,7 @@ interface GoogleMapsProps {
     setMap: Dispatch<SetStateAction<google.maps.Map | null>>;
     map: google.maps.Map | null;
     route: google.maps.DirectionsResult | undefined;
-    selectedMarker: google.maps.LatLng;
+    selectedMarker: google.maps.LatLngLiteral | null;
 }
 
 function GoogleMaps({
@@ -34,18 +34,6 @@ function GoogleMaps({
     route,
     selectedMarker,
 }: GoogleMapsProps) {
-    // const onLoad = React.useCallback(function callback(map: any) {
-    //     navigator.geolocation.getCurrentPosition((position) => {
-    //         const currLocation = {
-    //             lat: position.coords.latitude,
-    //             lng: position.coords.longitude,
-    //         };
-    //         const bounds = new window.google.maps.LatLngBounds(currLocation);
-    //         map.fitBounds(bounds);
-    //         setMap(map);
-    //     });
-    // }, []);
-
     const onLoad = React.useCallback(function callback(map: google.maps.Map) {
         setMap(map);
     }, []);
@@ -95,7 +83,7 @@ function GoogleMaps({
                             handleMarkerClick(e.latLng?.lat(), e.latLng?.lng());
                         }
                     }}
-                    opacity={0.4}
+                    opacity={0.2}
                 ></MarkerF>
             ))}
             {selectedMarker && (

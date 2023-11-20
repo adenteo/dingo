@@ -63,13 +63,13 @@ const Locations = ({
                 onLoad={onStartLoad}
             >
                 <input
-                    className=" m-3 p-3 px-4 rounded-full text-black outline-none text-base"
+                    className=" m-3 p-3 px-4 rounded-xl text-black outline-none text-base"
                     placeholder="Start Point"
                 ></input>
             </Autocomplete>
             <Autocomplete onPlaceChanged={onEndPlaceChanged} onLoad={onEndLoad}>
                 <input
-                    className=" m-3 p-3 px-4 rounded-full text-black outline-none text-base"
+                    className=" m-3 p-3 px-4 rounded-xl text-black outline-none text-base"
                     placeholder="End Destination"
                 ></input>
             </Autocomplete>
