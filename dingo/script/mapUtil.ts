@@ -1,6 +1,9 @@
 import haversineDistance from "haversine-distance";
 import { encode, decode, parse, stringify } from "urlencode";
 
+const apiUrl =
+    process.env.NEXT_PUBLIC_APP_API_BASE_URL || "http://localhost:3000";
+
 export interface PlacesV2 {
     formattedAddress: string;
     rating: number;
@@ -16,6 +19,7 @@ export interface PlacesV2 {
     id: string;
     location: LatLngV2;
     detourDistance: number;
+    photoUrl: string;
 }
 
 export enum PriceLevel {
@@ -186,7 +190,7 @@ const fetchNearbyPlaces = async (
     };
 
     const places = await fetch(
-        `http://localhost:3000/api/map/getNearbyPlaces?latitude=${lat}&longitude=${lng}&radius=${radius.toString()}`,
+        `${apiUrl}/api/map/getNearbyPlaces?latitude=${lat}&longitude=${lng}&radius=${radius.toString()}`,
         requestOptions
     );
     return places.json();
@@ -194,7 +198,7 @@ const fetchNearbyPlaces = async (
 
 const getPlaceImageUrl = async (query: string) => {
     const imageDetails = await fetch(
-        `http://localhost:3000/api/map/getPhotoUrl?query=${query}`
+        `${apiUrl}/api/map/getPhotoUrl?query=${query}`
     );
     const imageJson = await imageDetails.json();
     return imageJson.photoUri;
@@ -213,7 +217,7 @@ const getNearbyPlacesFromRoute = async (
         waypointPlaces.push(...places.places);
     }
     waypointPlaces = removeDuplicatePlaceIds(waypointPlaces);
-    waypointPlaces.forEach((place) => {
+    waypointPlaces.forEach(async (place) => {
         const latLng = {
             lat: place.location.latitude,
             lng: place.location.longitude,
@@ -222,6 +226,9 @@ const getNearbyPlacesFromRoute = async (
             latLng,
             routeWaypoints
         );
+        if (place.photos) {
+            place.photoUrl = await getPlaceImageUrl(place.photos[0].name);
+        }
         place.detourDistance = shortestDistanceToRoute;
         waypointLocations.push({
             lat: place.location.latitude,
@@ -401,5 +408,5 @@ export default {
     getGoogleMapsUrl,
     fetchNearbyPlaces,
     getPlaceImageUrl,
-    formatPrimaryType
+    formatPrimaryType,
 };

@@ -26,22 +26,21 @@ const Place = ({
 }: PlaceDetails) => {
     const [isAdded, setIsAdded] = useState(false);
     const [order, setOrder] = useState<number>(0);
-    const [placePhotoUrl, setPlacePhotoUrl] = useState("");
 
-    useEffect(() => {
-        const fetchPhotoUrl = async () => {
-            try {
-                const url = await mapUtil.getPlaceImageUrl(
-                    place.photos[0].name
-                );
-                setPlacePhotoUrl(url);
-            } catch (error) {
-                console.error("Error fetching photo URL:", error);
-            }
-        };
+    // useEffect(() => {
+    //     const fetchPhotoUrl = async () => {
+    //         try {
+    //             const url = await mapUtil.getPlaceImageUrl(
+    //                 place.photos[0].name
+    //             );
+    //             place.photoUrl = url;
+    //         } catch (error) {
+    //             console.error("Error fetching photo URL:", error);
+    //         }
+    //     };
 
-        fetchPhotoUrl();
-    }, []);
+    //     fetchPhotoUrl();
+    // }, []);
 
     const handleAddToTrip = () => {
         if (isAdded) {
@@ -69,10 +68,6 @@ const Place = ({
     }, [tripList]);
 
     const handlePlaceClicked = (place: PlacesV2) => {
-        // window.open(
-        //     "https://www.google.com/maps/search/?api=1&query=<address>&query_place_id=" +
-        //         placeId
-        // );
         const markerLatLng = {
             lat: place.location.latitude,
             lng: place.location.longitude,
@@ -90,7 +85,7 @@ const Place = ({
 
     const { ref, inView } = useInView({
         /* Optional options */
-        threshold: 1, // must be 100% in view.
+        threshold: 0.7, // must be 100% in view.
     });
 
     useEffect(() => {
@@ -108,19 +103,6 @@ const Place = ({
         place.detourDistance
     );
 
-    // useEffect(() => {
-    //     // Call getPlaceDetails with your map and request
-    //     if (map && place.place_id && !placeResult) {
-    //         const request = {
-    //             placeId: place.place_id,
-    //         };
-    //         console.log("DOING THIS");
-    //         mapUtil.getPlaceDetails(map, request, setPlaceResult);
-    //     } else {
-    //         console.log("nah");
-    //     }
-    // }, [place.place_id]);
-
     return (
         <div
             ref={ref}
@@ -132,7 +114,9 @@ const Place = ({
             }`}
         >
             <div className="w-auto h-[20vh] relative">
-                <img src={placePhotoUrl} className="w-full h-full"></img>
+                {place.photoUrl && (
+                    <img src={place.photoUrl} className="w-full h-full"></img>
+                )}
                 <div
                     className={`absolute top-4 right-2 text-xs rounded-full ${
                         isAdded
@@ -169,13 +153,17 @@ const Place = ({
                     )}
                 </div>
                 {place.currentOpeningHours?.openNow ? (
-                    <Badge variant='solid' colorScheme='green' className="mx-2">
-                    Open
-                  </Badge>
+                    <Badge variant="solid" colorScheme="green" className="mx-2">
+                        Open
+                    </Badge>
                 ) : (
-                  <Badge variant='solid' colorScheme='red' className="mx-2 text-xs">
-                  Closed
-                </Badge>
+                    <Badge
+                        variant="solid"
+                        colorScheme="red"
+                        className="mx-2 text-xs"
+                    >
+                        Closed
+                    </Badge>
                 )}
                 {place.primaryType && (
                     <div className="text-xs font-semibold mx-2">

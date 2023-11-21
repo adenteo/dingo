@@ -3,13 +3,13 @@ import { Dispatch, SetStateAction } from "react";
 import { FaChevronDown } from "react-icons/fa";
 
 interface SortMenuDetails {
-    setSortPlacesBy: Dispatch<SetStateAction<string | null>>;
-    sortPlacesBy: string | null;
+    setSortPlacesBy: Dispatch<SetStateAction<string>>;
+    sortPlacesBy: string;
 }
 
 const SortMenu = ({ sortPlacesBy, setSortPlacesBy }: SortMenuDetails) => {
     const handleSortingTypeClicked = (item: React.MouseEvent<HTMLElement>) => {
-        setSortPlacesBy(item.currentTarget.getAttribute("value"));
+        setSortPlacesBy(item.currentTarget.getAttribute("value") ?? "Rating");
     };
 
     return (
@@ -20,7 +20,7 @@ const SortMenu = ({ sortPlacesBy, setSortPlacesBy }: SortMenuDetails) => {
                     as={Button}
                     rightIcon={<FaChevronDown />}
                 >
-                    {sortPlacesBy ? "Sort by: " + sortPlacesBy : "Sort by"}
+                    {"Sort by: " + sortPlacesBy}
                 </MenuButton>
                 <MenuList className="text-black">
                     <MenuItem

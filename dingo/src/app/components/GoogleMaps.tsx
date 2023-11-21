@@ -11,7 +11,7 @@ import { Dispatch, SetStateAction, useEffect } from "react";
 
 const containerStyle = {
     width: "90vw",
-    height: "25vh",
+    height: "20vh",
     borderRadius: "0.25rem",
 };
 

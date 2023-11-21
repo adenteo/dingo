@@ -1,7 +1,6 @@
 "use client";
 import { useRef, useState, useEffect } from "react";
 import Locations from "./components/Locations";
-import FilterComponent from "./components/Filters";
 import GoogleMaps from "./components/GoogleMaps";
 import Places from "./components/Places";
 import TransitMode from "./components/TransitMode";
@@ -13,6 +12,8 @@ import mapUtil, { PlacesV2 } from "../../script/mapUtil";
 import DetourDistanceSlider from "./components/DetourDistanceSlider";
 import { Spinner } from "@chakra-ui/react";
 import SortMenu from "./components/SortMenu";
+import { FaChevronUp } from "react-icons/fa";
+import { SiGooglemaps } from "react-icons/si";
 
 const placesLibrary: Libraries = ["places"];
 
@@ -48,9 +49,19 @@ export default function Home() {
         useState<google.maps.TravelMode | null>(null);
     const [tripList, setTripList] = useState<PlacesV2[]>([]);
     const placesRef = useRef<any>(null);
-    const [detourDistance, setDetourDistance] = useState(5);
+    const homeRef = useRef<any>(null);
+    const [detourDistance, setDetourDistance] = useState(1);
     const [placesLoading, setPlacesLoading] = useState(false);
-    const [sortPlacesBy, setSortPlacesBy] = useState<string | null>(null);
+    const [sortPlacesBy, setSortPlacesBy] = useState<string>("Rating");
+    const [showTopSection, setShowTopSection] = useState(true);
+
+    const clearStates = () => {
+        setTripList([]);
+        setStartEndMarkers([]);
+        setWaypointMarkers([]);
+        setWaypointPlaces([]);
+        setSortPlacesBy("Rating");
+    };
 
     useEffect(() => {
         const getNearbyPlaces = async () => {
@@ -71,10 +82,25 @@ export default function Home() {
     }, [distance, duration, route]);
 
     useEffect(() => {
+        const handleScroll = () => {
+            if (window.scrollY >= placesRef.current.offsetTop) {
+                setShowTopSection(false);
+                window.removeEventListener("scroll", handleScroll);
+            }
+        };
+
         if (placesRef && waypointPlaces.length > 0) {
-            placesRef.current.scrollIntoView({ behavior: "smooth" });
+            setTimeout(() => {
+                placesRef.current.scrollIntoView({ behavior: "smooth" });
+            }, 100);
+            window.addEventListener("scroll", handleScroll);
         }
-    }, [waypointPlaces]);
+
+        return () => {
+            // Cleanup: Remove the event listener when the component is unmounted
+            window.removeEventListener("scroll", handleScroll);
+        };
+    }, [waypointPlaces, placesRef]);
 
     const handleOpenInGmaps = () => {
         if (
@@ -105,16 +131,11 @@ export default function Home() {
     };
 
     const handleLocations = async () => {
-        setTripList([]);
-        setStartEndMarkers([]);
-        setWaypointMarkers([]);
-        setWaypointPlaces([]);
-        setSortPlacesBy(null);
+        clearStates();
 
         if (!startLocation || !endLocation || !map) {
             return;
         }
-        console.log(startLocation);
         const startPlace = startLocation.getPlace();
         const endPlace = endLocation.getPlace();
         const startPlaceLat = startPlace.geometry?.location?.lat();
@@ -150,7 +171,12 @@ export default function Home() {
     return (
         <main>
             {/* Greeting page */}
-            <section className="flex min-h-screen flex-col items-center justify-between py-24">
+            <section
+                ref={homeRef}
+                className={`flex min-h-screen flex-col items-center justify-between py-24 ${
+                    !showTopSection && "hidden"
+                }`}
+            >
                 <div>
                     <h1 className="font-semibold text-7xl text-green-400">
                         Dingo
@@ -175,7 +201,10 @@ export default function Home() {
                     {isLoaded && (
                         <div className="w-48 mx-auto mt-10">
                             <div className="text-center mb-2">Max Detour</div>
-                            <DetourDistanceSlider setDetourDistance={setDetourDistance} detourDistance={detourDistance}/>
+                            <DetourDistanceSlider
+                                setDetourDistance={setDetourDistance}
+                                detourDistance={detourDistance}
+                            />
                             <div className="text-center mt-2">
                                 {detourDistance} km
                             </div>
@@ -193,10 +222,31 @@ export default function Home() {
                     </button>
                 </div>
             </section>
-            <section className="flex flex-col items-center justify-center max-h-screen">
+
+            <section
+                ref={placesRef}
+                className="flex flex-col items-center justify-center max-h-screen"
+            >
+                {waypointPlaces.length > 0 && (
+                    <button
+                        onClick={() => {
+                            clearStates();
+                            setShowTopSection(true);
+                            homeRef.current.scrollIntoView({
+                                behavior: "smooth",
+                            });
+                        }}
+                        className="flex flex-col items-center justify-center h-[10vh] my-4 animate-bounce"
+                    >
+                        <FaChevronUp size={25} />
+                        Back
+                    </button>
+                )}
                 <div
-                    className={`flex flex-col items-center justify-center h-[25vh] ${
-                        startEndMarkers.length > 0 ? "" : "hidden"
+                    className={`flex flex-col items-center justify-center h-[20vh] ${
+                        startEndMarkers.length > 0 && waypointPlaces.length > 0
+                            ? ""
+                            : "hidden"
                     }`}
                 >
                     <GoogleMaps
@@ -210,10 +260,7 @@ export default function Home() {
                     />
                 </div>
                 {waypointPlaces.length > 0 && (
-                    <div
-                        className="flex flex-col items-center justify-center h-[75vh]"
-                        ref={placesRef}
-                    >
+                    <div className="flex flex-col items-center justify-center h-[70vh]">
                         <div className="my-4">
                             <div className="flex justify-center">
                                 <div className="flex items-center text-xs">
@@ -228,7 +275,17 @@ export default function Home() {
                                     {duration?.text}
                                 </div>
                             </div>
-                            <SortMenu setSortPlacesBy={setSortPlacesBy} sortPlacesBy={sortPlacesBy}/>
+                            <div className="flex justify-center mt-2">
+                                <SiGooglemaps />
+                                <div className="font-bold text-green-500 mx-2">
+                                    {waypointPlaces.length}
+                                </div>
+                                <div>locations found.</div>
+                            </div>
+                            <SortMenu
+                                setSortPlacesBy={setSortPlacesBy}
+                                sortPlacesBy={sortPlacesBy}
+                            />
                         </div>
                         {tripList.length > 0 && (
                             <button

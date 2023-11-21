@@ -10,7 +10,7 @@ export async function GET(request: Request) {
         {
             method: "GET",
             headers: {
-                "X-Goog-Api-Key": "AIzaSyBz8pBnQZeqs3QHBPWjoNsh-F_OaN2SujM",
+                "X-Goog-Api-Key": process.env.NEXT_PUBLIC_GOOGLE_MAPS_API ?? "",
             }
         }
     );

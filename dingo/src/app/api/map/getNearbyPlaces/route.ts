@@ -12,7 +12,7 @@ export async function GET(request: Request) {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            "X-Goog-Api-Key": "AIzaSyBz8pBnQZeqs3QHBPWjoNsh-F_OaN2SujM",
+            "X-Goog-Api-Key": process.env.NEXT_PUBLIC_GOOGLE_MAPS_API ?? "",
             "X-Goog-FieldMask": 'places.currentOpeningHours,places.displayName,places.editorialSummary,places.googleMapsUri,places.photos,places.formattedAddress,places.primaryType,places.rating,places.priceLevel,places.userRatingCount,places.servesVegetarianFood,places.id,places.location',
         },
         // body: '{\n  "includedTypes": ["restaurant"],\n  "maxResultCount": 10,\n  "locationRestriction": {\n    "circle": {\n      "center": {\n        "latitude": 37.7937,\n        "longitude": -122.3965},\n      "radius": 500.0\n    }\n  }\n}',

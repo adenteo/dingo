@@ -13,7 +13,7 @@ function DetourDistanceSlider({setDetourDistance, detourDistance}: DetourDistanc
   return (
     <Slider
       id='slider'
-      defaultValue={5}
+      defaultValue={1}
       min={1}
       max={10}
       step={0.5}
