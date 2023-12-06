@@ -2,7 +2,8 @@
 
 import { Dispatch, SetStateAction } from "react";
 import { Autocomplete } from "@react-google-maps/api";
-
+import { Input, InputGroup, InputLeftElement } from "@chakra-ui/react";
+import { CiLocationOn } from "react-icons/ci";
 interface LocationDetails {
     startLocation: google.maps.places.Autocomplete | null;
     endLocation: google.maps.places.Autocomplete | null;
@@ -62,16 +63,20 @@ const Locations = ({
                 onPlaceChanged={onStartPlaceChanged}
                 onLoad={onStartLoad}
             >
-                <input
-                    className=" m-3 p-3 px-4 rounded-xl text-black outline-none text-base"
+                <Input
+                    focusBorderColor="green.500"
+                    className="my-3 rounded-xl text-black bg-white text-base"
                     placeholder="Start Point"
-                ></input>
+                    size="lg"
+                ></Input>
             </Autocomplete>
             <Autocomplete onPlaceChanged={onEndPlaceChanged} onLoad={onEndLoad}>
-                <input
-                    className=" m-3 p-3 px-4 rounded-xl text-black outline-none text-base"
+                <Input
+                    focusBorderColor="green.500"
+                    className="my-3 rounded-xl text-black bg-white text-base"
                     placeholder="End Destination"
-                ></input>
+                    size="lg"
+                ></Input>
             </Autocomplete>
         </div>
     );

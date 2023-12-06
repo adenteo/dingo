@@ -212,7 +212,7 @@ const getNearbyPlacesFromRoute = async (
     const routeWaypoints = route?.routes[0].overview_path;
     let waypointPlaces: PlacesV2[] = [];
     const waypointLocations: google.maps.LatLngLiteral[] = [];
-    for (let i = 0; i < waypoints.length; i += 20) {
+    for (let i = 0; i < waypoints.length; i += 200) {
         const places = await fetchNearbyPlaces(waypoints[i], radius);
         waypointPlaces.push(...places.places);
     }
@@ -226,9 +226,6 @@ const getNearbyPlacesFromRoute = async (
             latLng,
             routeWaypoints
         );
-        if (place.photos) {
-            place.photoUrl = await getPlaceImageUrl(place.photos[0].name);
-        }
         place.detourDistance = shortestDistanceToRoute;
         waypointLocations.push({
             lat: place.location.latitude,

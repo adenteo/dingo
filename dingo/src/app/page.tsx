@@ -178,10 +178,10 @@ export default function Home() {
                 }`}
             >
                 <div>
-                    <h1 className="font-semibold text-7xl text-green-400">
+                    <h1 className="font-semibold text-7xl text-green-400 text-center">
                         Dingo
                     </h1>
-                    <h2 className="font-semibold text-xs pl-1">
+                    <h2 className="font-semibold text-xs pl-1.5">
                         Dine on the go.
                     </h2>
                 </div>

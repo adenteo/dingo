@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import Place from "./Place";
-import { PlacesV2 } from "../../../script/mapUtil";
+import mapUtil, { PlacesV2 } from "../../../script/mapUtil";
+import { CircularProgress } from "@chakra-ui/react";
 
 interface PlacesDetails {
     places: PlacesV2[];
@@ -24,32 +25,86 @@ const Places = ({
     tripList,
     sortPlacesBy,
 }: PlacesDetails) => {
-    const [sortedPlaces, setSortedPlaces] = useState(places);
+    const [sortedPlaces, setSortedPlaces] = useState(places.slice(0, 20));
     const containerRef = useRef<HTMLDivElement>(null);
+    const observerRef = useRef<HTMLDivElement | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        // Set up the Intersection Observer when the component mounts
+        const observer = new IntersectionObserver(handleIntersection, {
+            root: null, // Use the viewport as the root
+            rootMargin: "0px", // No margin
+            threshold: 0.1, // Trigger the callback when 10% of the target is visible
+        });
+
+        // Observe the target element (observerRef)
+        if (observerRef.current) {
+            observer.observe(observerRef.current);
+        }
+
+        // Clean up the Intersection Observer when the component is unmounted
+        return () => {
+            if (observerRef.current) {
+                observer.unobserve(observerRef.current);
+            }
+        };
+    }, [sortedPlaces, isLoading]);
+
     useEffect(() => {
         if (!sortPlacesBy) {
             return;
         }
         let newSortedPlaces;
         if (sortPlacesBy === "Rating") {
-            newSortedPlaces = [...places].sort((a, b) => b.rating - a.rating);
+            newSortedPlaces = [...sortedPlaces].sort(
+                (a, b) => b.rating - a.rating
+            );
         } else if (sortPlacesBy === "Detour Distance") {
-            newSortedPlaces = [...places].sort(
+            newSortedPlaces = [...sortedPlaces].sort(
                 (a, b) => a.detourDistance - b.detourDistance
             );
         } else if (sortPlacesBy === "Number of Reviews") {
-            newSortedPlaces = [...places].sort(
+            newSortedPlaces = [...sortedPlaces].sort(
                 (a, b) => b.userRatingCount - a.userRatingCount
             );
-        } else { //Default sort by rating
-          newSortedPlaces = [...places].sort((a, b) => b.rating - a.rating);
+        } else {
+            //Default sort by rating
+            newSortedPlaces = [...sortedPlaces].sort(
+                (a, b) => b.rating - a.rating
+            );
         }
         setSortedPlaces(newSortedPlaces);
         if (containerRef.current) {
-          containerRef.current.scrollTop = 0;
+            containerRef.current.scrollTop = 0;
         }
-        
     }, [sortPlacesBy]);
+
+    const loadMoreItems = async () => {
+        setIsLoading(true);
+        console.log("GETTING IMAGES.")
+        // In this example, we'll load the next 20 items and update the sortedPlaces state
+        const nextItems = places.slice(
+            sortedPlaces.length,
+            sortedPlaces.length + 1
+        );
+        console.log(nextItems)
+        nextItems.forEach(async (item) => {
+            const url = await mapUtil.getPlaceImageUrl(item.photos[0].name);
+            item.photoUrl = url;
+        });
+        setSortedPlaces((prevPlaces) => [...prevPlaces, ...nextItems]);
+        setIsLoading(false);
+    };
+
+    const handleIntersection: IntersectionObserverCallback = (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting && !isLoading) {
+            // When the target element (observerRef) becomes visible, load more items
+            loadMoreItems();
+            console.log("FOUND MORE ITEMS");
+        }
+    };
 
     return (
         <div className="overflow-auto" ref={containerRef}>
@@ -66,6 +121,20 @@ const Places = ({
                     />
                 );
             })}
+            <CircularProgress
+                className="flex items-center justify-center"
+                size="1.5em"
+                isIndeterminate
+                color="green.300"
+            />
+            <div
+                ref={(el) => {
+                    if (el) {
+                        observerRef.current = el;
+                    }
+                }}
+                style={{ height: "10px" }}
+            />
         </div>
     );
 };

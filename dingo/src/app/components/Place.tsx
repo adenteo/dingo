@@ -27,20 +27,22 @@ const Place = ({
     const [isAdded, setIsAdded] = useState(false);
     const [order, setOrder] = useState<number>(0);
 
-    // useEffect(() => {
-    //     const fetchPhotoUrl = async () => {
-    //         try {
-    //             const url = await mapUtil.getPlaceImageUrl(
-    //                 place.photos[0].name
-    //             );
-    //             place.photoUrl = url;
-    //         } catch (error) {
-    //             console.error("Error fetching photo URL:", error);
-    //         }
-    //     };
-
-    //     fetchPhotoUrl();
-    // }, []);
+    useEffect(() => {
+        const fetchPhotoUrl = async () => {
+            try {
+                const url = await mapUtil.getPlaceImageUrl(
+                    place.photos[0].name
+                );
+                place.photoUrl = url;
+            } catch (error) {
+                console.error("Error fetching photo URL:", error);
+            }
+        };
+        if (!place.photoUrl) {
+            console.log("FETCHING IMAGE URL");
+            // fetchPhotoUrl();
+        }
+    }, []);
 
     const handleAddToTrip = () => {
         if (isAdded) {
@@ -152,6 +154,11 @@ const Place = ({
                         </div>
                     )}
                 </div>
+                {place.primaryType && (
+                    <div className="text-xs font-semibold mx-2">
+                        {mapUtil.formatPrimaryType(place.primaryType)}
+                    </div>
+                )}
                 {place.currentOpeningHours?.openNow ? (
                     <Badge variant="solid" colorScheme="green" className="mx-2">
                         Open
@@ -165,12 +172,6 @@ const Place = ({
                         Closed
                     </Badge>
                 )}
-                {place.primaryType && (
-                    <div className="text-xs font-semibold mx-2">
-                        {mapUtil.formatPrimaryType(place.primaryType)}
-                    </div>
-                )}
-
                 {place.editorialSummary && (
                     <div className="text-xs mx-2 my-2">
                         {place.editorialSummary.text}
