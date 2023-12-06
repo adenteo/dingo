@@ -27,23 +27,6 @@ const Place = ({
     const [isAdded, setIsAdded] = useState(false);
     const [order, setOrder] = useState<number>(0);
 
-    useEffect(() => {
-        const fetchPhotoUrl = async () => {
-            try {
-                const url = await mapUtil.getPlaceImageUrl(
-                    place.photos[0].name
-                );
-                place.photoUrl = url;
-            } catch (error) {
-                console.error("Error fetching photo URL:", error);
-            }
-        };
-        if (!place.photoUrl) {
-            console.log("FETCHING IMAGE URL");
-            // fetchPhotoUrl();
-        }
-    }, []);
-
     const handleAddToTrip = () => {
         if (isAdded) {
             // If already added, remove from the list

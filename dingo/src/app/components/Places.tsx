@@ -25,7 +25,7 @@ const Places = ({
     tripList,
     sortPlacesBy,
 }: PlacesDetails) => {
-    const [sortedPlaces, setSortedPlaces] = useState(places.slice(0, 20));
+    const [sortedPlaces, setSortedPlaces] = useState(places.slice(0, 10));
     const containerRef = useRef<HTMLDivElement>(null);
     const observerRef = useRef<HTMLDivElement | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -82,16 +82,27 @@ const Places = ({
 
     const loadMoreItems = async () => {
         setIsLoading(true);
-        console.log("GETTING IMAGES.")
-        // In this example, we'll load the next 20 items and update the sortedPlaces state
+        // Load the next 10 items and update the sortedPlaces state
         const nextItems = places.slice(
             sortedPlaces.length,
-            sortedPlaces.length + 1
+            sortedPlaces.length + 10
         );
-        console.log(nextItems)
+        if (nextItems.length == 0) {
+            console.log("hi");
+            setIsLoading(false);
+            return;
+        }
         nextItems.forEach(async (item) => {
-            const url = await mapUtil.getPlaceImageUrl(item.photos[0].name);
-            item.photoUrl = url;
+            if (!item.photoUrl) {
+                try {
+                    const url = await mapUtil.getPlaceImageUrl(
+                        item.photos[0].name
+                    );
+                    item.photoUrl = url;
+                } catch (error) {
+                    console.error("Unable to fetch image");
+                }
+            }
         });
         setSortedPlaces((prevPlaces) => [...prevPlaces, ...nextItems]);
         setIsLoading(false);
@@ -121,12 +132,14 @@ const Places = ({
                     />
                 );
             })}
-            <CircularProgress
-                className="flex items-center justify-center"
-                size="1.5em"
-                isIndeterminate
-                color="green.300"
-            />
+            {isLoading && (
+                <CircularProgress
+                    className="flex items-center justify-center"
+                    size="1.5em"
+                    isIndeterminate
+                    color="green.300"
+                />
+            )}
             <div
                 ref={(el) => {
                     if (el) {

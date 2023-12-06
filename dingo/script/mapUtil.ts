@@ -232,6 +232,20 @@ const getNearbyPlacesFromRoute = async (
             lng: place.location.longitude,
         });
     });
+
+    // Load first 10 images
+    for (let i = 0; i < 10; i++) {
+        if (!waypointPlaces[i].photoUrl) {
+            try {
+                const url = await getPlaceImageUrl(
+                    waypointPlaces[i].photos[0].name
+                );
+                waypointPlaces[i].photoUrl = url;
+            } catch (error) {
+                console.error("Unable to fetch image");
+            }
+        }
+    }
     return { waypointPlaces, waypointLocations };
 };
 
