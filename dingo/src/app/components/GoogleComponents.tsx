@@ -61,6 +61,16 @@ const GoogleComponents = ({ GoogleAPIKey }: GoogleComponentsProps) => {
     const [showTopSection, setShowTopSection] = useState(true);
     const [isSettingsPopupVisible, setIsSettingsPopupVisible] = useState(false);
 
+    useEffect(()=> {
+      const googleAPIKey = localStorage.getItem("Google-API-Key");
+      if (!googleAPIKey) {
+        console.log("NO API DETECTED")
+        setIsSettingsPopupVisible(true);
+      } else {
+        console.log("API DETECTED")
+      }
+    },[isSettingsPopupVisible])
+
     const handleSettingsButtonClick = () => {
         setIsSettingsPopupVisible(true);
     };

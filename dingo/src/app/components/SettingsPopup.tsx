@@ -26,9 +26,10 @@ const SettingsPopup = ({
     const [apiKey, setApiKey] = useState(GoogleAPIKey ?? "");
 
     const handleSaveClick = () => {
-        console.log("Saving:", apiKey);
+      console.log("OK")
         localStorage.setItem("Google-API-Key", apiKey);
         setIsSettingsPopupVisible(false);
+        window.location.reload();
     };
     return (
         <Modal

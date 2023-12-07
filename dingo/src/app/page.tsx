@@ -5,25 +5,20 @@ import GoogleComponents from "./components/GoogleComponents";
 export default function Home() {
     const [GoogleAPIKey, setGoogleAPIKey] = useState<string | null>(null);
     useEffect(() => {
-        if (
-            typeof window !== "undefined" &&
-            window.localStorage &&
-            !GoogleAPIKey
-        ) {
+        if (typeof window !== "undefined" && window.localStorage) {
             const storedAPIKey = localStorage.getItem("Google-API-Key");
-            if (storedAPIKey) {
-                console.log("FOUND STORED KEY:" + storedAPIKey);
-                setGoogleAPIKey(storedAPIKey);
-            }
+            setGoogleAPIKey(storedAPIKey ?? "");
         }
     }, []);
 
+    console.log(GoogleAPIKey);
+
     return (
         <div>
-            {GoogleAPIKey ? (
-               <GoogleComponents GoogleAPIKey={GoogleAPIKey}/>
+            {GoogleAPIKey !== null ? ( // We know here that we have fetched the API key from localstorage. If it exists.
+                <GoogleComponents GoogleAPIKey={GoogleAPIKey} />
             ) : (
-                <main>hi hi hi hi hi</main>
+                <></>
             )}
         </div>
     );
