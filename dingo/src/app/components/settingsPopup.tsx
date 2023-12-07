@@ -18,7 +18,7 @@ interface ApiSettingsPopupProps {
   setIsSettingsPopupVisible: Dispatch<SetStateAction<boolean>>;
 }
 
-const ApiSettingsPopup = ({
+const SettingsPopup = ({
   isSettingsPopupVisible,
   setIsSettingsPopupVisible,
 }: ApiSettingsPopupProps) => {
@@ -81,4 +81,4 @@ const ApiSettingsPopup = ({
   );
 };
 
-export default ApiSettingsPopup;
+export default SettingsPopup;

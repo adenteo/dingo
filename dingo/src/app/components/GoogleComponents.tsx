@@ -14,7 +14,7 @@ import { SiGooglemaps } from "react-icons/si";
 import { IoIosSettings } from "react-icons/io";
 import { useState, useRef, useEffect } from "react";
 import mapUtil, { PlacesV2 } from "../../../script/mapUtil";
-import ApiSettingsPopup from "./ApiSettingsPopup";
+import SettingsPopup from "./SettingsPopup";
 
 interface GoogleComponentsProps {
     GoogleAPIKey: string;
@@ -203,7 +203,7 @@ const GoogleComponents = ({ GoogleAPIKey }: GoogleComponentsProps) => {
                     <IoIosSettings size={40} />
                 </div>
                 {isSettingsPopupVisible && (
-                    <ApiSettingsPopup
+                    <SettingsPopup
                         isSettingsPopupVisible={isSettingsPopupVisible}
                         setIsSettingsPopupVisible={setIsSettingsPopupVisible}
                     />
