@@ -12,9 +12,9 @@ import SortMenu from "./SortMenu";
 import { FaChevronUp } from "react-icons/fa";
 import { SiGooglemaps } from "react-icons/si";
 import { IoIosSettings } from "react-icons/io";
-import SettingsPopup from "./SettingsPopup";
 import { useState, useRef, useEffect } from "react";
 import mapUtil, { PlacesV2 } from "../../../script/mapUtil";
+import ApiSettingsPopup from "./ApiSettingsPopup";
 
 interface GoogleComponentsProps {
     GoogleAPIKey: string;
@@ -203,7 +203,7 @@ const GoogleComponents = ({ GoogleAPIKey }: GoogleComponentsProps) => {
                     <IoIosSettings size={40} />
                 </div>
                 {isSettingsPopupVisible && (
-                    <SettingsPopup
+                    <ApiSettingsPopup
                         isSettingsPopupVisible={isSettingsPopupVisible}
                         setIsSettingsPopupVisible={setIsSettingsPopupVisible}
                     />
