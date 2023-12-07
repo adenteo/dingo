@@ -1,4 +1,3 @@
-customise droppins
 store same searches in localStorage.
-Add new trip should open places based on distance
+sign in
 
