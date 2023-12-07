@@ -12,7 +12,7 @@ import SortMenu from "./SortMenu";
 import { FaChevronUp } from "react-icons/fa";
 import { SiGooglemaps } from "react-icons/si";
 import { IoIosSettings } from "react-icons/io";
-import SettingsPopup from "./settingsPopup";
+import SettingsPopup from "./SettingsPopup";
 import { useState, useRef, useEffect } from "react";
 import mapUtil, { PlacesV2 } from "../../../script/mapUtil";
 
