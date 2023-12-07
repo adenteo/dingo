@@ -14,6 +14,7 @@ interface PlacesDetails {
     onAddToTrip: (a: PlacesV2, b: boolean) => number | null;
     tripList: PlacesV2[];
     sortPlacesBy: string | null;
+    googleAPIKey: string;
 }
 
 const Places = ({
@@ -24,6 +25,7 @@ const Places = ({
     onAddToTrip,
     tripList,
     sortPlacesBy,
+    googleAPIKey
 }: PlacesDetails) => {
     const [sortedPlaces, setSortedPlaces] = useState(places.slice(0, 10));
     const containerRef = useRef<HTMLDivElement>(null);
@@ -96,7 +98,8 @@ const Places = ({
             if (!item.photoUrl) {
                 try {
                     const url = await mapUtil.getPlaceImageUrl(
-                        item.photos[0].name
+                        item.photos[0].name,
+                        googleAPIKey
                     );
                     item.photoUrl = url;
                 } catch (error) {

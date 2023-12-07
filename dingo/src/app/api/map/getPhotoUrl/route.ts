@@ -1,8 +1,9 @@
 export async function GET(request: Request) {
-    const GoogleAPIKey = localStorage.getItem("Google-API-Key");
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query");
-    if (!query) {
+    const googleAPIkey = request.headers.get("Authorization");
+
+    if (!query || !googleAPIkey) {
         return;
     }
 
@@ -11,7 +12,7 @@ export async function GET(request: Request) {
         {
             method: "GET",
             headers: {
-                "X-Goog-Api-Key": GoogleAPIKey ?? "",
+                "X-Goog-Api-Key": googleAPIkey,
             }
         }
     );

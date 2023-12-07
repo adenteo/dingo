@@ -180,12 +180,14 @@ const removeDuplicatePlaceIds = (array: PlacesV2[]) => {
 
 const fetchNearbyPlaces = async (
     latLng: google.maps.LatLng,
-    radius: number
+    radius: number,
+    googleAPIKey: string
 ) => {
     const lat = latLng.lat().toString();
     const lng = latLng.lng().toString();
     let requestOptions: any = {
         method: "GET",
+        headers: { Authorization: googleAPIKey },
         redirect: "follow",
     };
 
@@ -196,9 +198,14 @@ const fetchNearbyPlaces = async (
     return places.json();
 };
 
-const getPlaceImageUrl = async (query: string) => {
+const getPlaceImageUrl = async (query: string, googleAPIKey: string) => {
+    let requestOptions: any = {
+        method: "GET",
+        headers: { Authorization: googleAPIKey },
+    };
     const imageDetails = await fetch(
-        `${apiUrl}/api/map/getPhotoUrl?query=${query}`
+        `${apiUrl}/api/map/getPhotoUrl?query=${query}`,
+        requestOptions
     );
     const imageJson = await imageDetails.json();
     return imageJson.photoUri;
@@ -206,15 +213,23 @@ const getPlaceImageUrl = async (query: string) => {
 
 const getNearbyPlacesFromRoute = async (
     route: google.maps.DirectionsResult,
-    radius: number
+    radius: number,
+    googleAPIKey: string
 ) => {
     const waypoints = route["routes"][0]["overview_path"];
     const routeWaypoints = route?.routes[0].overview_path;
     let waypointPlaces: PlacesV2[] = [];
     const waypointLocations: google.maps.LatLngLiteral[] = [];
-    for (let i = 0; i < waypoints.length; i += 200) {
-        const places = await fetchNearbyPlaces(waypoints[i], radius);
-        waypointPlaces.push(...places.places);
+    for (let i = 0; i < waypoints.length; i += 40) {
+        const places = await fetchNearbyPlaces(
+            waypoints[i],
+            radius,
+            googleAPIKey
+        );
+        if (places.places) {
+          console.log(places)
+            waypointPlaces.push(...places.places);
+        }
     }
     waypointPlaces = removeDuplicatePlaceIds(waypointPlaces);
     waypointPlaces.forEach(async (place) => {
@@ -238,7 +253,8 @@ const getNearbyPlacesFromRoute = async (
         if (!waypointPlaces[i].photoUrl) {
             try {
                 const url = await getPlaceImageUrl(
-                    waypointPlaces[i].photos[0].name
+                    waypointPlaces[i].photos[0].name,
+                    googleAPIKey
                 );
                 waypointPlaces[i].photoUrl = url;
             } catch (error) {

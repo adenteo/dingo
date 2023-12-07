@@ -16,7 +16,7 @@ export default function Home() {
     return (
         <div>
             {GoogleAPIKey !== null ? ( // We know here that we have fetched the API key from localstorage. If it exists.
-                <GoogleComponents GoogleAPIKey={GoogleAPIKey} />
+                <GoogleComponents googleAPIKey={GoogleAPIKey} />
             ) : (
                 <></>
             )}

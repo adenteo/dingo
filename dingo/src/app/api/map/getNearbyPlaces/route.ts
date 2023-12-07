@@ -1,10 +1,10 @@
 export async function GET(request: Request) {
-    const GoogleAPIKey = localStorage.getItem("Google-API-Key");
     const { searchParams } = new URL(request.url);
     const latitude = searchParams.get("latitude");
     const longitude = searchParams.get("longitude");
     const radius = searchParams.get("radius");
-    if (!latitude || !longitude || !radius) {
+    const googleAPIkey = request.headers.get("Authorization");
+    if (!latitude || !longitude || !radius || !googleAPIkey) {
         return;
     }
 
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "X-Goog-Api-Key": GoogleAPIKey ?? "",
+                "X-Goog-Api-Key": googleAPIkey,
                 "X-Goog-FieldMask":
                     "places.currentOpeningHours,places.displayName,places.editorialSummary,places.googleMapsUri,places.photos,places.formattedAddress,places.primaryType,places.rating,places.priceLevel,places.userRatingCount,places.servesVegetarianFood,places.id,places.location",
             },
@@ -35,6 +35,5 @@ export async function GET(request: Request) {
             }),
         }
     );
-
     return new Response(result.body);
 }

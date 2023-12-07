@@ -17,14 +17,14 @@ import mapUtil, { PlacesV2 } from "../../../script/mapUtil";
 import SettingsPopup from "./SettingsPopup";
 
 interface GoogleComponentsProps {
-    GoogleAPIKey: string;
+    googleAPIKey: string;
 }
 
 const placesLibrary: Libraries = ["places"];
 
-const GoogleComponents = ({ GoogleAPIKey }: GoogleComponentsProps) => {
+const GoogleComponents = ({ googleAPIKey }: GoogleComponentsProps) => {
     const { isLoaded } = useLoadScript({
-        googleMapsApiKey: GoogleAPIKey,
+        googleMapsApiKey: googleAPIKey,
         libraries: placesLibrary,
     });
     const [startLocation, setStartLocation] =
@@ -90,7 +90,8 @@ const GoogleComponents = ({ GoogleAPIKey }: GoogleComponentsProps) => {
                 const { waypointPlaces, waypointLocations } =
                     await mapUtil.getNearbyPlacesFromRoute(
                         route,
-                        detourDistance * 1000
+                        detourDistance * 1000,
+                        googleAPIKey
                     );
                 console.log(waypointPlaces);
                 setWaypointMarkers(waypointLocations);
@@ -229,7 +230,7 @@ const GoogleComponents = ({ GoogleAPIKey }: GoogleComponentsProps) => {
                         setTransitMode={setTransitMode}
                         isLoaded={isLoaded}
                     />
-                    {GoogleAPIKey && (
+                    {googleAPIKey && (
                         <div className="w-48 mx-auto mt-10">
                             <div className="text-center mb-2">Max Detour</div>
                             <DetourDistanceSlider
@@ -335,6 +336,7 @@ const GoogleComponents = ({ GoogleAPIKey }: GoogleComponentsProps) => {
                             onAddToTrip={handleAddToTrip}
                             tripList={tripList}
                             sortPlacesBy={sortPlacesBy}
+                            googleAPIKey={googleAPIKey}
                         />
                     </div>
                 )}
